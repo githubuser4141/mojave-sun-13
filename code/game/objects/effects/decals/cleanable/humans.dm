@@ -105,11 +105,11 @@
 /obj/effect/decal/cleanable/blood/gibs
 	name = "gibs"
 	desc = "They look bloody and gruesome."
-	icon = 'icons/effects/blood.dmi'
+	icon = 'mojave/icons/effects/blood.dmi' //Mojave Edit - routes to our gibs
 	icon_state = "gib1"
 	layer = LOW_OBJ_LAYER
 	plane = GAME_PLANE
-	random_icon_states = list("gib1", "gib2", "gib3", "gib4", "gib5", "gib6")
+	random_icon_states = list("gib1", "gib2", "gib3", "gib4", "gib5", "gib6", "gib7")
 	mergeable_decal = FALSE
 	turf_loc_check = FALSE
 
@@ -121,16 +121,18 @@
 /obj/effect/decal/cleanable/blood/gibs/Initialize(mapload, list/datum/disease/diseases)
 	. = ..()
 	reagents.add_reagent(/datum/reagent/liquidgibs, 5)
-	RegisterSignal(src, COMSIG_MOVABLE_PIPE_EJECTING, .proc/on_pipe_eject)
+	RegisterSignal(src, COMSIG_MOVABLE_PIPE_EJECTING, PROC_REF(on_pipe_eject))
 
 /obj/effect/decal/cleanable/blood/gibs/replace_decal(obj/effect/decal/cleanable/C)
 	return FALSE //Never fail to place us
 
+/* MOJAVE SUN EDIT BEGIN - FUCK THESE
 /obj/effect/decal/cleanable/blood/gibs/dry()
 	. = ..()
 	if(!.)
 		return
 	AddComponent(/datum/component/rot, 0, 5 MINUTES, 0.7)
+MOJAVE SUN EDIT END */
 
 /obj/effect/decal/cleanable/blood/gibs/ex_act(severity, target)
 	return FALSE
@@ -167,44 +169,45 @@
 		return
 
 	var/datum/move_loop/loop = SSmove_manager.move_to(src, get_step(src, direction), delay = delay, timeout = range * delay, priority = MOVEMENT_ABOVE_SPACE_PRIORITY)
-	RegisterSignal(loop, COMSIG_MOVELOOP_POSTPROCESS, .proc/spread_movement_effects)
+	RegisterSignal(loop, COMSIG_MOVELOOP_POSTPROCESS, PROC_REF(spread_movement_effects))
 
 /obj/effect/decal/cleanable/blood/gibs/proc/spread_movement_effects(datum/move_loop/has_target/source)
 	SIGNAL_HANDLER
 	new /obj/effect/decal/cleanable/blood/splatter(loc, streak_diseases)
 
 /obj/effect/decal/cleanable/blood/gibs/up
-	icon_state = "gibup1"
-	random_icon_states = list("gib1", "gib2", "gib3", "gib4", "gib5", "gib6","gibup1","gibup1","gibup1")
+	icon_state = "gib6"
+	random_icon_states = list("gib6", "gib4", "gib5", "gibhead") //Mojave Edit - Replaces with our gibs
 
 /obj/effect/decal/cleanable/blood/gibs/down
-	icon_state = "gibdown1"
-	random_icon_states = list("gib1", "gib2", "gib3", "gib4", "gib5", "gib6","gibdown1","gibdown1","gibdown1")
+	icon_state = "gib7"
+	random_icon_states = list("gib7", "gib2", "gib1", "giblimb1", "giblimb4") //Mojave Edit - Replaces with our gibs
 
 /obj/effect/decal/cleanable/blood/gibs/body
-	icon_state = "gibtorso"
-	random_icon_states = list("gibhead", "gibtorso")
+	icon_state = "gib5"
+	random_icon_states = list("gib1", "gib2", "gib7", "gib3", "gib5") //Mojave Edit - Replaces with our gibs
 
 /obj/effect/decal/cleanable/blood/gibs/torso
-	icon_state = "gibtorso"
-	random_icon_states = null
+	icon_state = "gib7"
+	random_icon_states = list("gib7", "gib1", "gib2", "gib3", "gib6") //Mojave Edit - Replaces with our gibs
 
 /obj/effect/decal/cleanable/blood/gibs/limb
-	icon_state = "gibleg"
-	random_icon_states = list("gibleg", "gibarm")
+	icon_state = "giblimb2"
+	random_icon_states = list("giblimb1", "giblimb2", "giblimb3", "giblimb4") //Mojave Edit - Replaces with our gibs
 
 /obj/effect/decal/cleanable/blood/gibs/core
-	icon_state = "gibmid1"
-	random_icon_states = list("gibmid1", "gibmid2", "gibmid3")
+	icon_state = "gib2"
+	random_icon_states = list("gib2", "gib7", "gib1", "gib3") //Mojave Edit - Replaces with our gibs
 
 /obj/effect/decal/cleanable/blood/gibs/old
 	name = "old rotting gibs"
-	desc = "Space Jesus, why didn't anyone clean this up? They smell terrible."
+	desc = "Terrible smelling rotting gibs. They don't look much better either." //Mojave Edit - "Space Jesus?" Really dude?
 	icon_state = "gib1-old"
 	bloodiness = 0
 	should_dry = FALSE
 	dryname = "old rotting gibs"
-	drydesc = "Space Jesus, why didn't anyone clean this up? They smell terrible."
+	drydesc = "Terrible smelling rotting gibs. They don't look much better either."
+	random_icon_states =  list("gib1-old", "gib2-old", "gib3-old", "gib4-old", "gib5-old", "gib6-old", "gib7-old") //Mojave Edit - Proper icon randomization
 
 /obj/effect/decal/cleanable/blood/gibs/old/Initialize(mapload, list/datum/disease/diseases)
 	. = ..()
@@ -363,9 +366,9 @@ GLOBAL_LIST_EMPTY(bloody_footprints_cache)
 /obj/effect/decal/cleanable/blood/hitsplatter/proc/fly_towards(turf/target_turf, range)
 	var/delay = 2
 	var/datum/move_loop/loop = SSmove_manager.move_towards(src, target_turf, delay, timeout = delay * range, priority = MOVEMENT_ABOVE_SPACE_PRIORITY, flags = MOVEMENT_LOOP_START_FAST)
-	RegisterSignal(loop, COMSIG_MOVELOOP_PREPROCESS_CHECK, .proc/pre_move)
-	RegisterSignal(loop, COMSIG_MOVELOOP_POSTPROCESS, .proc/post_move)
-	RegisterSignal(loop, COMSIG_PARENT_QDELETING, .proc/loop_done)
+	RegisterSignal(loop, COMSIG_MOVELOOP_PREPROCESS_CHECK, PROC_REF(pre_move))
+	RegisterSignal(loop, COMSIG_MOVELOOP_POSTPROCESS, PROC_REF(post_move))
+	RegisterSignal(loop, COMSIG_PARENT_QDELETING, PROC_REF(loop_done))
 
 /obj/effect/decal/cleanable/blood/hitsplatter/proc/pre_move(datum/move_loop/source)
 	SIGNAL_HANDLER

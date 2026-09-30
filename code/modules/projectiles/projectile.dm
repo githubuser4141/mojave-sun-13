@@ -174,7 +174,7 @@
 	///How much we want to drop the embed_chance value, if we can embed, per tile, for falloff purposes
 	var/embed_falloff_tile
 	var/static/list/projectile_connections = list(
-		COMSIG_ATOM_ENTERED = .proc/on_entered,
+		COMSIG_ATOM_ENTERED = PROC_REF(on_entered),
 	)
 
 /obj/projectile/Initialize(mapload)
@@ -245,7 +245,6 @@
 		var/turf/closed/wall/W = target_loca
 		if(impact_effect_type && !hitscan)
 			new impact_effect_type(target_loca, hitx, hity)
-
 		W.add_dent(WALL_DENT_SHOT, hitx, hity)
 
 		return BULLET_ACT_HIT

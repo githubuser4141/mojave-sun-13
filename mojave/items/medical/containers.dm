@@ -7,7 +7,7 @@
 
 /obj/item/reagent_containers/ms13/flask
 	name = "ceramic flask"
-	desc = "A crudely sealed, rounded ceramic flask, can be used to store liquids. <b>If it is open when dropped or put in a bag, it will roll over and spill! <br> Alt-Click to open or close it.</b>"
+	desc = "A crudely sealed, rounded ceramic flask. Often used to store various liquids. <b>If it is open when dropped or put in a bag, it will roll over and spill! <br> Alt-Click to open or close it.</b>"
 	icon_state = "ceramic_flask"
 	volume = 15
 	throwforce = 10
@@ -70,7 +70,7 @@
 		else
 			to_chat(user, span_notice("You swallow a gulp of [src]."))
 		SEND_SIGNAL(src, COMSIG_GLASS_DRANK, M, user)
-		addtimer(CALLBACK(reagents, /datum/reagents.proc/trans_to, M, 5, TRUE, TRUE, FALSE, user, FALSE, INGEST), 5)
+		addtimer(CALLBACK(reagents, TYPE_PROC_REF(/datum/reagents, trans_to), M, 5, TRUE, TRUE, FALSE, user, FALSE, INGEST), 5)
 		playsound(src, "mojave/sound/ms13effects/drinking_redux.ogg", 45, TRUE, 2)
 
 /obj/item/reagent_containers/ms13/flask/add_context(atom/source, list/context, obj/item/held_item, mob/living/user)
@@ -86,5 +86,37 @@
 	name = "bitter drink flask"
 	desc = "A painted round bottom ceramic flask, the rim smells of bitterness. <b>If it is open when dropped or put in a bag, it will roll over and spill! <br> Alt-Click to open or close it.</b>"
 	icon_state = "bitter_drink"
-	volume = 15
 	list_reagents = list(/datum/reagent/medicine/bitter_drink = 15)
+
+/obj/item/reagent_containers/ms13/flask/herbal_antitox
+	name = "herbal anti-toxin flask"
+	desc = "A painted round bottom ceramic flask, the rim smells of sharp bitterness. <b>If it is open when dropped or put in a bag, it will roll over and spill! <br> Alt-Click to open or close it.</b>"
+	icon_state = "bitter_drink"
+	list_reagents = list(/datum/reagent/medicine/herb_antitox = 15)
+
+/obj/item/reagent_containers/ms13/flask/blood_remedy
+	name = "blood remedy flask"
+	desc = "A painted round bottom ceramic flask, the rim smells of sourness. <b>If it is open when dropped or put in a bag, it will roll over and spill! <br> Alt-Click to open or close it.</b>"
+	icon_state = "bitter_drink"
+	list_reagents = list(/datum/reagent/medicine/blood_remedy = 15)
+
+/obj/item/reagent_containers/ms13/flask/burn_remedy
+	name = "burn remedy flask"
+	desc = "A painted round bottom ceramic flask, the rim has a strong scent of spice. <b>If it is open when dropped or put in a bag, it will roll over and spill! <br> Alt-Click to open or close it.</b>"
+	icon_state = "bitter_drink"
+	list_reagents = list(/datum/reagent/medicine/burn_remedy = 15)
+
+/obj/item/reagent_containers/ms13/flask/trail_brew
+	name = "trail brew flask"
+	desc = "A basic round bottom ceramic flask, the rim smells faintly sweet. <b>If it is open when dropped or put in a bag, it will roll over and spill! <br> Alt-Click to open or close it.</b>"
+	list_reagents = list(/datum/reagent/medicine/trail_brew = 15)
+
+/obj/item/reagent_containers/ms13/flask/radtura_flask
+	name = "radtura mix flask"
+	desc = "A basic round bottom ceramic flask, the rim smells of warm bitterness. <b>If it is open when dropped or put in a bag, it will roll over and spill! <br> Alt-Click to open or close it.</b>"
+	list_reagents = list(/datum/reagent/medicine/radtura_mix = 15)
+
+/obj/item/reagent_containers/ms13/flask/dark_datflask
+	name = "dark datura flask"
+	desc = "A basic round bottom ceramic flask, the rim smells of harsh bitterness. <b>If it is open when dropped or put in a bag, it will roll over and spill! <br> Alt-Click to open or close it.</b>"
+	list_reagents = list(/datum/reagent/toxin/ms13/dark_datura = 15)

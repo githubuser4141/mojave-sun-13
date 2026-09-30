@@ -95,7 +95,7 @@
 				return
 			var/mob/living/silicon/robot/bro = user
 			bro.cell.use(30)
-			addtimer(CALLBACK(reagents, /datum/reagents.proc/add_reagent, refill, trans), 600)
+			addtimer(CALLBACK(reagents, TYPE_PROC_REF(/datum/reagents, add_reagent), refill, trans), 600)
 
 	else if(target.is_drainable()) //A dispenser. Transfer FROM it TO us.
 		if (!is_refillable())
@@ -147,7 +147,7 @@
 	if(bartender_check(target) && ranged)
 		return
 	if(prob(33))
-		var/obj/item/stack/sheet/ms13/glass/S = new(drop_location()) //MOJAVE EDIT - Makes it drop our glass instead of TG glass and removes the broken variants since we don't have any so it just makes invisible broken bottles. Revert after CAT 
+		var/obj/item/stack/sheet/ms13/glass/S = new(drop_location()) //MOJAVE EDIT - Makes it drop our glass instead of TG glass and removes the broken variants since we don't have any so it just makes invisible broken bottles. Revert after CAT
 		target.Bumped(S)
 	playsound(src, "shatter", 70, TRUE)
 	qdel(src)
@@ -252,9 +252,11 @@
 	inhand_icon_state = "coffee"
 	spillable = TRUE
 
+/* MOJAVE SUN EDIT BEGIN
 /obj/item/reagent_containers/food/drinks/mug/update_icon_state()
 	icon_state = reagents.total_volume ? "tea" : "tea_empty"
 	return ..()
+MOJAVE SUN EDIT END*/
 
 /obj/item/reagent_containers/food/drinks/mug/tea
 	name = "Duke Purple tea"

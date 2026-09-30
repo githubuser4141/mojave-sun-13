@@ -107,7 +107,7 @@
 		return //some cheeky git has started you early
 	weather_duration = rand(weather_duration_lower, weather_duration_upper)
 	running = TRUE
-	addtimer(CALLBACK(src, .proc/wind_down), weather_duration)
+	addtimer(CALLBACK(src, PROC_REF(wind_down)), weather_duration)
 
 	if(particleEffectType)
 		SSParticleWeather.SetparticleEffect(new particleEffectType);
@@ -138,7 +138,7 @@
 
 	//Tick on
 	if(severityStepsTaken < severitySteps)
-		addtimer(CALLBACK(src, .proc/ChangeSeverity), weather_duration / severitySteps)
+		addtimer(CALLBACK(src, PROC_REF(ChangeSeverity)), weather_duration / severitySteps)
 
 
 /**
@@ -154,7 +154,7 @@
 		SSParticleWeather.particleEffect.animateSeverity(severityMod())
 
 		//Wait for the last particle to fade, then qdel yourself
-		addtimer(CALLBACK(src, .proc/end), SSParticleWeather.particleEffect.lifespan + SSParticleWeather.particleEffect.fade)
+		addtimer(CALLBACK(src, PROC_REF(end)), SSParticleWeather.particleEffect.lifespan + SSParticleWeather.particleEffect.fade)
 
 
 
@@ -218,6 +218,14 @@
 /datum/particle_weather/proc/weather_act(mob/living/L)
 	return
 
+//weather effects for objects
+/datum/particle_weather/proc/weather_obj_act(obj/L)
+	if(can_weather_act_obj(L))
+		L.weather = TRUE
+	else
+		L.weather = FALSE
+
+
 //Not using looping_sounds properly. somebody smart should fix this
 /datum/particle_weather/proc/weather_sound_effect(mob/living/L)
 	var/datum/looping_sound/currentSound = currentSounds[L]
@@ -248,3 +256,11 @@
 	last_message = scale_range_pick(minSeverity, maxSeverity, severity, weather_messages)
 	if(last_message)
 		to_chat(L, last_message)
+
+/datum/particle_weather/proc/can_weather_act_obj(obj/obj_to_check)
+	var/turf/obj_turf = get_turf(obj_to_check)
+
+	if(!obj_turf)
+		return
+
+	return TRUE

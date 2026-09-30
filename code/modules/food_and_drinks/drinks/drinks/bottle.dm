@@ -635,12 +635,13 @@
 	return
 
 /obj/item/reagent_containers/food/drinks/bottle/molotov/throw_impact(atom/hit_atom, datum/thrownthing/throwingdatum)
-	var/firestarter = 0
-	for(var/datum/reagent/R in reagents.reagent_list)
-		for(var/A in accelerants)
-			if(istype(R,A))
-				firestarter = 1
-				break
+	//MOJAVE SUN EDIT - Vapour
+	var/firestarter = FALSE
+	for(var/datum/reagent/possible_accelerant as anything in reagents.reagent_list)
+		if(possible_accelerant.accelerant_quality)
+			firestarter = TRUE
+			break
+	//MOJAVE SUN EDIT - Vapour
 	if(firestarter && active)
 		hit_atom.fire_act()
 		new /obj/effect/hotspot(get_turf(hit_atom))
@@ -654,7 +655,7 @@
 		to_chat(user, span_info("You light [src] on fire."))
 		add_overlay(custom_fire_overlay ? custom_fire_overlay : GLOB.fire_overlay)
 		if(!isGlass)
-			addtimer(CALLBACK(src, .proc/explode), 5 SECONDS)
+			addtimer(CALLBACK(src, PROC_REF(explode)), 5 SECONDS)
 
 /obj/item/reagent_containers/food/drinks/bottle/molotov/proc/explode()
 	if(!active)
@@ -691,7 +692,7 @@
 
 /obj/item/reagent_containers/food/drinks/bottle/pruno/Initialize(mapload)
 	. = ..()
-	RegisterSignal(src, COMSIG_MOVABLE_MOVED, .proc/check_fermentation)
+	RegisterSignal(src, COMSIG_MOVABLE_MOVED, PROC_REF(check_fermentation))
 
 /obj/item/reagent_containers/food/drinks/bottle/pruno/Destroy()
 	UnregisterSignal(src, COMSIG_MOVABLE_MOVED)
@@ -712,7 +713,7 @@
 		return
 	if(!fermentation_time_remaining)
 		fermentation_time_remaining = fermentation_time
-	fermentation_timer = addtimer(CALLBACK(src, .proc/do_fermentation), fermentation_time_remaining, TIMER_UNIQUE|TIMER_STOPPABLE)
+	fermentation_timer = addtimer(CALLBACK(src, PROC_REF(do_fermentation)), fermentation_time_remaining, TIMER_UNIQUE|TIMER_STOPPABLE)
 	fermentation_time_remaining = null
 
 // actually ferment

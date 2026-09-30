@@ -62,7 +62,6 @@
 	var/registered_name = null
 	/// Linked bank account.
 	var/datum/bank_account/registered_account
-
 	/// Linked holopay.
 	var/obj/structure/holopay/my_store
 	/// Cooldown between projecting holopays
@@ -102,6 +101,8 @@
 	/// Boolean value. If TRUE, the [Intern] tag gets prepended to this ID card when the label is updated.
 	var/is_intern = FALSE
 
+	var/shows_age = TRUE // MOJAVE SUN EDIT - Does this 'ID' have information about age? Useful for stuff like "bullet IDs" that won't have more than initials carved into them.
+
 /obj/item/card/id/Initialize(mapload)
 	. = ..()
 
@@ -112,13 +113,13 @@
 		update_label()
 		update_icon()
 
-	RegisterSignal(src, COMSIG_ATOM_UPDATED_ICON, .proc/update_in_wallet)
+	RegisterSignal(src, COMSIG_ATOM_UPDATED_ICON, PROC_REF(update_in_wallet))
 
 /obj/item/card/id/Destroy()
 	if (registered_account)
 		registered_account.bank_cards -= src
-	if (my_store)
-		QDEL_NULL(my_store)
+//	if (my_store) // MOJAVE SUN EDIT =FREAK OF
+//		QDEL_NULL(my_store) // MOJAVE SUN EDOT =FREAK OF
 	return ..()
 
 /obj/item/card/id/get_id_examine_strings(mob/user)
@@ -398,6 +399,8 @@
 
 		wildcard_access_list |= new_access
 
+/* // MOJAVE SUN EDIT BEGIN
+
 /obj/item/card/id/attack_self(mob/user)
 	if(Adjacent(user))
 		var/minor
@@ -620,7 +623,6 @@
 	registered_account = account
 	to_chat(user, span_notice("The provided account has been linked to this ID card."))
 	return TRUE
-
 /obj/item/card/id/AltClick(mob/living/user)
 	if(!alt_click_can_use_id(user))
 		return
@@ -680,7 +682,19 @@
 	else
 		msg += span_info("There is no registered account linked to this card. Alt-Click to add one.")
 
-	return msg
+	return msg*/ // ORIGINAL SETUP
+
+/obj/item/card/id/attack_self(mob/user)
+	if(Adjacent(user))
+		user.visible_message(span_notice("[user] shows you: [icon2html(src, viewers(user))] [src.name]"), span_notice("You show \the [src.name]"))
+	add_fingerprint(user)
+
+/obj/item/card/id/examine(mob/user)
+	. = ..()
+	if(registered_age && shows_age)
+		. += "It indicates that the holder is [registered_age] years old."
+
+// MOJAVE SUN EDIT END
 
 /obj/item/card/id/GetAccess()
 	return access.Copy()
@@ -823,8 +837,8 @@
 
 /obj/item/card/id/advanced/Initialize(mapload)
 	. = ..()
-	RegisterSignal(src, COMSIG_ITEM_EQUIPPED, .proc/update_intern_status)
-	RegisterSignal(src, COMSIG_ITEM_DROPPED, .proc/remove_intern_status)
+	RegisterSignal(src, COMSIG_ITEM_EQUIPPED, PROC_REF(update_intern_status))
+	RegisterSignal(src, COMSIG_ITEM_DROPPED, PROC_REF(remove_intern_status))
 
 /obj/item/card/id/advanced/Destroy()
 	UnregisterSignal(src, list(COMSIG_ITEM_EQUIPPED, COMSIG_ITEM_DROPPED))
@@ -872,8 +886,8 @@
 		UnregisterSignal(old_loc, list(COMSIG_ITEM_EQUIPPED, COMSIG_ITEM_DROPPED))
 
 	if(istype(source.loc, /obj/item/modular_computer/tablet))
-		RegisterSignal(source.loc, COMSIG_ITEM_EQUIPPED, .proc/update_intern_status)
-		RegisterSignal(source.loc, COMSIG_ITEM_DROPPED, .proc/remove_intern_status)
+		RegisterSignal(source.loc, COMSIG_ITEM_EQUIPPED, PROC_REF(update_intern_status))
+		RegisterSignal(source.loc, COMSIG_ITEM_DROPPED, PROC_REF(remove_intern_status))
 
 /obj/item/card/id/advanced/Moved(atom/OldLoc, Dir)
 	. = ..()
@@ -891,18 +905,18 @@
 			UnregisterSignal(slot_holder, list(COMSIG_ITEM_EQUIPPED, COMSIG_ITEM_DROPPED))
 
 	if(istype(loc, /obj/item/pda) || istype(loc, /obj/item/storage/wallet))
-		RegisterSignal(loc, COMSIG_ITEM_EQUIPPED, .proc/update_intern_status)
-		RegisterSignal(loc, COMSIG_ITEM_DROPPED, .proc/remove_intern_status)
+		RegisterSignal(loc, COMSIG_ITEM_EQUIPPED, PROC_REF(update_intern_status))
+		RegisterSignal(loc, COMSIG_ITEM_DROPPED, PROC_REF(remove_intern_status))
 
 	if(istype(loc, /obj/item/computer_hardware/card_slot))
 		var/obj/item/computer_hardware/card_slot/slot = loc
 
-		RegisterSignal(loc, COMSIG_MOVABLE_MOVED, .proc/on_holding_card_slot_moved)
+		RegisterSignal(loc, COMSIG_MOVABLE_MOVED, PROC_REF(on_holding_card_slot_moved))
 
 		if(istype(slot.holder, /obj/item/modular_computer/tablet))
 			var/obj/item/modular_computer/tablet/slot_holder = slot.holder
-			RegisterSignal(slot_holder, COMSIG_ITEM_EQUIPPED, .proc/update_intern_status)
-			RegisterSignal(slot_holder, COMSIG_ITEM_DROPPED, .proc/remove_intern_status)
+			RegisterSignal(slot_holder, COMSIG_ITEM_EQUIPPED, PROC_REF(update_intern_status))
+			RegisterSignal(slot_holder, COMSIG_ITEM_DROPPED, PROC_REF(remove_intern_status))
 
 /obj/item/card/id/advanced/update_overlays()
 	. = ..()
@@ -1435,7 +1449,7 @@
 							var/fake_trim_name = "[trim.assignment] ([trim.trim_state])"
 							trim_list[fake_trim_name] = trim_path
 
-					var/selected_trim_path = tgui_input_list(user, "Select trim to apply to your card.\nNote: This will not grant any trim accesses.", "Forge Trim", sort_list(trim_list, /proc/cmp_typepaths_asc))
+					var/selected_trim_path = tgui_input_list(user, "Select trim to apply to your card.\nNote: This will not grant any trim accesses.", "Forge Trim", sort_list(trim_list, GLOBAL_PROC_REF(cmp_typepaths_asc)))
 					if(selected_trim_path)
 						SSid_access.apply_trim_to_chameleon_card(src, trim_list[selected_trim_path])
 
@@ -1479,9 +1493,11 @@
 				forged = FALSE
 				to_chat(user, span_notice("You successfully reset the ID card."))
 				return
+		/* // MOJAVE SUN EDIT BEGIN
 		if (popup_input == "Change Account ID")
 			set_new_account(user)
 			return
+		*/ // MOJAVE SUN EDIT END
 	return ..()
 
 /// A special variant of the classic chameleon ID card which accepts all access.

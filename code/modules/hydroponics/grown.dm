@@ -72,8 +72,9 @@
 	. = ..() //Only call it here because we want all the genes and shit to be applied before we add edibility. God this code is a mess.
 
 	seed.prepare_result(src)
+	/* MOJAVE SUN EDIT - Removes produce changing size based on potency, messes with visuals + inventory
 	transform *= TRANSFORM_USING_VARIABLE(seed.potency, 100) + 0.5 //Makes the resulting produce's sprite larger or smaller based on potency!
-
+	*/
 /obj/item/food/grown/Destroy()
 	if(isatom(seed))
 		QDEL_NULL(seed)
@@ -97,7 +98,7 @@
 
 /obj/item/food/grown/MakeLeaveTrash()
 	if(trash_type)
-		AddElement(/datum/element/food_trash, trash_type, FOOD_TRASH_OPENABLE, /obj/item/food/grown/.proc/generate_trash)
+		AddElement(/datum/element/food_trash, trash_type, FOOD_TRASH_OPENABLE, TYPE_PROC_REF(/obj/item/food/grown, generate_trash))
 	return
 
 /// Callback proc for bonus behavior for generating trash of grown food. Used by [/datum/element/food_trash].

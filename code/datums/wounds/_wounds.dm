@@ -138,6 +138,7 @@
 	SEND_SIGNAL(victim, COMSIG_CARBON_GAIN_WOUND, src, limb)
 	if(!victim.alerts[ALERT_WOUNDED]) // only one alert is shared between all of the wounds
 		victim.throw_alert(ALERT_WOUNDED, /atom/movable/screen/alert/status_effect/wound)
+	victim.throw_alert_text(/atom/movable/screen/alert/text/cry, "Your [limb.name] really hurts!", override = FALSE) // MOJAVE SUN EDIT - FO text alert
 
 	var/demoted
 	if(old_wound)
@@ -172,7 +173,7 @@
 	remove_wound_from_victim()
 	victim = new_victim
 	if(victim)
-		RegisterSignal(victim, COMSIG_PARENT_QDELETING, .proc/null_victim)
+		RegisterSignal(victim, COMSIG_PARENT_QDELETING, PROC_REF(null_victim))
 
 /datum/wound/proc/source_died()
 	SIGNAL_HANDLER
@@ -229,7 +230,7 @@
 	if(limb)
 		UnregisterSignal(limb, COMSIG_PARENT_QDELETING)
 	limb = new_value
-	RegisterSignal(new_value, COMSIG_PARENT_QDELETING, .proc/source_died)
+	RegisterSignal(new_value, COMSIG_PARENT_QDELETING, PROC_REF(source_died))
 	if(. && disabling)
 		var/obj/item/bodypart/old_limb = .
 		REMOVE_TRAIT(old_limb, TRAIT_PARALYSIS, src)

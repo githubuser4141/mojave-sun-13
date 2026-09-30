@@ -9,6 +9,11 @@
 /obj/effect/turf_decal/ms13/road
 	icon = 'mojave/icons/decals/road_decals.dmi'
 
+/obj/effect/turf_decal/ms13/road/Initialize(mapload)
+	. = ..()
+	if(prob(35))
+		icon_state = "[initial(icon_state)]-[rand(1,2)]"
+
 /obj/effect/turf_decal/ms13/road/horizontalline
 	icon_state = "horizontal_line"
 
@@ -20,6 +25,11 @@
 
 /obj/effect/turf_decal/ms13/road/verticalcrossing
 	icon_state = "vertical_crossing"
+
+// Street drains
+
+/obj/effect/turf_decal/ms13/road/drain
+	icon_state = "drain"
 
 //Water drains
 
@@ -61,6 +71,17 @@
 /obj/effect/turf_decal/ms13/sheltersigns/shelteryellow_circle
 	icon_state = "shelteryellow_circle"
 
+//Explosive Marks
+
+/obj/effect/turf_decal/ms13/boommark
+	icon = 'mojave/icons/decals/ground_decals.dmi'
+	icon_state = "boom"
+
+/obj/effect/turf_decal/ms13/boommark/Initialize(mapload)
+	. = ..()
+	if(prob(90))
+		icon_state = "[initial(icon_state)]-[rand(1,8)]"
+
 // Graffiti
 
 /obj/effect/turf_decal/ms13/graffiti
@@ -77,6 +98,15 @@
 
 /obj/effect/turf_decal/ms13/graffiti/fuckncr
 	icon_state = "fuckncr"
+
+/obj/effect/turf_decal/ms13/graffiti/gohome
+	icon_state = "gohome"
+
+/obj/effect/turf_decal/ms13/graffiti/arrow
+	icon_state = "arrow"
+
+/obj/effect/turf_decal/ms13/graffiti/danger
+	icon_state = "danger"
 
 /obj/effect/turf_decal/ms13/graffiti/fuckyou
 	icon_state = "fuckyou"
@@ -197,3 +227,127 @@
 
 /obj/effect/turf_decal/ms13/graffiti/scorpion_south
 	icon_state = "scorpion_south"
+
+/obj/effect/turf_decal/ms13/graffiti/ncr_stop
+	icon_state = "ncr_stop"
+
+/obj/effect/turf_decal/ms13/graffiti/ncr_caution
+	icon_state = "ncr_caution"
+
+/obj/effect/turf_decal/ms13/graffiti/ncr_bear
+	icon_state = "ncr_bear"
+
+/obj/effect/turf_decal/ms13/graffiti/ncr
+	icon_state = "ncr"
+
+/obj/effect/turf_decal/ms13/graffiti/do_not
+	icon_state = "donot"
+
+/obj/effect/turf_decal/ms13/graffiti/death
+	icon_state = "death"
+
+/obj/effect/turf_decal/ms13/graffiti/die_young
+	icon_state = "dieyoung"
+
+/obj/effect/turf_decal/ms13/graffiti/reaper
+	icon_state = "reaper"
+
+/obj/effect/turf_decal/ms13/graffiti/mark
+	icon_state = "mark"
+
+/obj/effect/turf_decal/ms13/graffiti/skullbones
+	icon_state = "skullbones"
+
+/obj/effect/turf_decal/ms13/graffiti/boomboom
+	icon_state = "boombooms"
+	
+/obj/effect/turf_decal/ms13/graffiti/truedeath
+	icon_state = "death2"
+
+/obj/effect/turf_decal/ms13/graffiti/deadman
+	icon_state = "deadman"
+
+/obj/effect/turf_decal/ms13/graffiti/mines
+	icon_state = "mines"
+	
+/obj/effect/turf_decal/ms13/graffiti/slumbers
+	icon_state = "slumbers"
+
+/obj/effect/turf_decal/ms13/graffiti/large
+	icon = 'mojave/icons/decals/graffiti64x64.dmi'
+
+/obj/effect/turf_decal/ms13/graffiti/large/nogod_red
+	icon_state = "nogod_red"
+
+/obj/effect/turf_decal/ms13/graffiti/large/nogod_black
+	icon_state = "nogod_black"
+
+/obj/effect/turf_decal/ms13/graffiti/large/nofuture_red
+	icon_state = "nofuture_red"
+
+/obj/effect/turf_decal/ms13/graffiti/large/nofuture_black
+	icon_state = "nofuture_black"
+
+/obj/effect/turf_decal/ms13/graffiti/large/checkpoint_decal
+	icon_state = "checkpoint_decal"
+
+/obj/effect/turf_decal/ms13/graffiti/large/workers_decal
+	icon_state = "workers_decal"
+
+/obj/effect/turf_decal/ms13/graffiti/large/seal_president
+	icon_state = "seal_president"
+
+// Posters
+
+/obj/effect/turf_decal/ms13/poster
+	icon = 'mojave/icons/decals/posters.dmi'
+
+/obj/effect/turf_decal/ms13/poster/vault
+	icon_state = "vault_sign"
+
+//Wallpapers and Wall Coverings
+
+/obj/effect/turf_decal/ms13/covering
+	icon = 'mojave/icons/decals/wallcovering.dmi'
+
+//Wallpapers
+
+/obj/effect/turf_decal/ms13/covering/wallpaper/green
+	icon_state = "wallpaper_green"
+
+/obj/effect/turf_decal/ms13/covering/wallpaper/blue
+	icon_state = "wallpaper_blue"
+
+/obj/effect/turf_decal/ms13/covering/wallpaper/blue/stripes
+	icon_state = "wallpaper_stripes"
+
+/obj/effect/turf_decal/ms13/covering/wallpaper/red
+	icon_state = "wallpaper_red"
+
+//Tiles
+
+/obj/effect/turf_decal/ms13/covering/tiles/blue
+	icon_state = "tiles_cyan"
+
+/obj/effect/turf_decal/ms13/covering/tiles/white
+	icon_state = "tiles_white"
+
+//Paint
+
+/obj/effect/turf_decal/ms13/covering/paint/gray
+	icon_state = "paint_gray"
+
+/obj/effect/turf_decal/ms13/covering/paint/white
+	icon_state = "paint_white"
+
+/obj/effect/turf_decal/ms13/covering/paint/red
+	icon_state = "paint_red"
+
+/obj/effect/turf_decal/ms13/covering/paint/yellow
+	icon_state = "paint_yellow"
+
+/obj/effect/turf_decal/ms13/covering/paint/green
+	icon_state = "paint_green"
+
+/obj/effect/turf_decal/ms13/covering/paint/blue
+	icon_state = "paint_blue"

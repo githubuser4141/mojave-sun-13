@@ -16,6 +16,8 @@
 	var/footstep_sounds
 	///Whether or not to add variation to the sounds played
 	var/sound_vary = FALSE
+	///Play step on 1,3,5 and etc
+	var/play_step = FALSE // MOJAVE ADD
 
 /datum/element/footstep/Attach(datum/target, footstep_type = FOOTSTEP_MOB_BAREFOOT, volume = 0.5, e_range = -8, sound_vary = FALSE)
 	. = ..()
@@ -29,7 +31,7 @@
 		if(FOOTSTEP_MOB_HUMAN)
 			if(!ishuman(target))
 				return ELEMENT_INCOMPATIBLE
-			RegisterSignal(target, COMSIG_MOVABLE_MOVED, .proc/play_humanstep)
+			RegisterSignal(target, COMSIG_MOVABLE_MOVED, PROC_REF(play_humanstep))
 			steps_for_living[target] = 0
 			return
 		if(FOOTSTEP_MOB_CLAW)
@@ -44,13 +46,19 @@
 			footstep_sounds = 'sound/effects/footstep/slime1.ogg'
 		if(FOOTSTEP_OBJ_MACHINE)
 			footstep_sounds = 'sound/effects/bang.ogg'
-			RegisterSignal(target, COMSIG_MOVABLE_MOVED, .proc/play_simplestep_machine)
+			RegisterSignal(target, COMSIG_MOVABLE_MOVED, PROC_REF(play_simplestep_machine))
 			return
 		if(FOOTSTEP_OBJ_ROBOT)
 			footstep_sounds = 'sound/effects/tank_treads.ogg'
-			RegisterSignal(target, COMSIG_MOVABLE_MOVED, .proc/play_simplestep_machine)
+			RegisterSignal(target, COMSIG_MOVABLE_MOVED, PROC_REF(play_simplestep_machine))
 			return
-	RegisterSignal(target, COMSIG_MOVABLE_MOVED, .proc/play_simplestep)
+		// MOJAVE SUN EDIT BEGIN
+		if(FOOTSTEP_PA)
+			footstep_sounds = list('mojave/sound/ms13effects/footsteps/pa/PA_01.ogg', 'mojave/sound/ms13effects/footsteps/pa/PA_02.ogg', 'mojave/sound/ms13effects/footsteps/pa/PA_03.ogg', 'mojave/sound/ms13effects/footsteps/pa/PA_04.ogg', 'mojave/sound/ms13effects/footsteps/pa/PA_05.ogg', 'mojave/sound/ms13effects/footsteps/pa/PA_06.ogg')
+			RegisterSignal(target, COMSIG_MOVABLE_MOVED, PROC_REF(play_simplestep_pa))
+			return
+		// MOJAVE SUN EDIT END
+	RegisterSignal(target, COMSIG_MOVABLE_MOVED, PROC_REF(play_simplestep))
 	steps_for_living[target] = 0
 
 /datum/element/footstep/Detach(atom/movable/source)
@@ -163,4 +171,19 @@
 		return
 	playsound(source_loc, footstep_sounds, 50, falloff_distance = 1, vary = sound_vary)
 
+// MOJAVE SUN EDIT BEGIN
+/datum/element/footstep/proc/play_simplestep_pa(atom/movable/source)
+	SIGNAL_HANDLER
+
+	//if (SHOULD_DISABLE_FOOTSTEPS(source)) // No silent PA?
+	//	return
+
+	var/turf/open/source_loc = get_turf(source)
+	if(!istype(source_loc))
+		return
+	if(!play_step)
+		playsound(source_loc, footstep_sounds, 100, falloff_distance = 1, vary = sound_vary)
+
+	play_step = !play_step
+// MOJAVE SUN EDIT END
 #undef SHOULD_DISABLE_FOOTSTEPS

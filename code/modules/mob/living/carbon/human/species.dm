@@ -103,7 +103,8 @@ GLOBAL_LIST_EMPTY(features_by_species)
 	///Type of damage attack does. Ethereals attack with burn damage for example.
 	var/attack_type = BRUTE
 	///Lowest possible punch damage this species can give. If this is set to 0, punches will always miss.
-	var/punchdamagelow = 1
+	//var/punchdamagelow = 1
+	var/punchdamagelow = 5 //MOJAVE SUN EDIT - ORIGINAL ABOVE
 	///Highest possible punch damage this species can give.
 	var/punchdamagehigh = 10
 	///Damage at which punches from this race will stun
@@ -164,7 +165,7 @@ GLOBAL_LIST_EMPTY(features_by_species)
 	var/attack_verb = "punch"
 	/// The visual effect of the attack.
 	var/attack_effect = ATTACK_EFFECT_PUNCH
-	var/sound/attack_sound = 'sound/weapons/punch1.ogg'
+	var/sound/attack_sound = 'mojave/sound/ms13weapons/meleesounds/punch_1.ogg' //Mojave Edit - Our punch sound
 	var/sound/miss_sound = 'sound/weapons/punchmiss.ogg'
 
 	///What gas does this species breathe? Used by suffocation screen alerts, most of actual gas breathing is handled by mutantlungs. See [life.dm][code/modules/mob/living/carbon/human/life.dm]
@@ -821,18 +822,23 @@ GLOBAL_LIST_EMPTY(features_by_species)
 				underwear_overlay = mutable_appearance(underwear.icon, underwear.icon_state, -BODY_LAYER)
 				if(!underwear.use_static)
 					underwear_overlay.color = species_human.underwear_color
+				underwear_overlay = species_human.apply_fatness_filter(underwear_overlay, TRUE)
 				standing += underwear_overlay
 
 		if(species_human.undershirt)
 			var/datum/sprite_accessory/undershirt/undershirt = GLOB.undershirt_list[species_human.undershirt]
 			if(undershirt)
-				standing += mutable_appearance(undershirt.icon, undershirt.icon_state, -BODY_LAYER)
+				var/mutable_appearance/undershirt_overlay = mutable_appearance(undershirt.icon, undershirt.icon_state, -BODY_LAYER)
+				undershirt_overlay = species_human.apply_fatness_filter(undershirt_overlay, TRUE)
+				standing += undershirt_overlay
 				//MOJAVE SUN EDIT END - Gender Prefs
 
 		if(species_human.socks && species_human.num_legs >= 2 && !(DIGITIGRADE in species_traits))
 			var/datum/sprite_accessory/socks/socks = GLOB.socks_list[species_human.socks]
 			if(socks)
-				standing += mutable_appearance(socks.icon, socks.icon_state, -BODY_LAYER)
+				var/mutable_appearance/socks_overlay = mutable_appearance(socks.icon, socks.icon_state, -BODY_LAYER)
+				socks_overlay = species_human.apply_fatness_filter(socks_overlay, TRUE)
+				standing += socks_overlay
 
 	if(standing.len)
 		species_human.overlays_standing[BODY_LAYER] = standing
@@ -1179,7 +1185,14 @@ GLOBAL_LIST_EMPTY(features_by_species)
 				if(!disable_warning)
 					to_chat(H, span_warning("The [I.name] is too big to attach!")) //should be src?
 				return FALSE
-			if( istype(I, /obj/item/gun)) // MOJAVE SUN EDIT | ORIGINAL IS "if( istype(I, /obj/item/pda) || istype(I, /obj/item/pen) || is_type_in_list(I, H.wear_suit.allowed) )" || This is so we can rebrand the """"""suit slot""""""" into a gun sling spot
+			// MOJAVE SUN EDIT BEGIN
+			if(istype(I, /obj/item/ms13/twohanded))
+				var/obj/item/ms13/twohanded/W = I
+				if(!W.stowable)
+					return FALSE
+				return TRUE
+			// MOJAVE SUN EDIT END
+			if(istype(I, /obj/item/gun)) // MOJAVE SUN EDIT | ORIGINAL IS "if( istype(I, /obj/item/pda) || istype(I, /obj/item/pen) || is_type_in_list(I, H.wear_suit.allowed) )" || This is so we can rebrand the """"""suit slot""""""" into a gun sling spot
 				return TRUE
 			return FALSE
 		if(ITEM_SLOT_HANDCUFFED)
@@ -1265,7 +1278,7 @@ GLOBAL_LIST_EMPTY(features_by_species)
 	if(time_since_irradiated > RAD_MOB_HAIRLOSS && DT_PROB(RAD_MOB_HAIRLOSS_PROB, delta_time))
 		if(!(source.hairstyle == "Bald") && (HAIR in species_traits))
 			to_chat(source, span_danger("Your hair starts to fall out in clumps..."))
-			addtimer(CALLBACK(src, .proc/go_bald, source), 5 SECONDS)
+			addtimer(CALLBACK(src, PROC_REF(go_bald), source), 5 SECONDS)
 
 /**
  * Makes the target human bald.
@@ -1341,6 +1354,11 @@ GLOBAL_LIST_EMPTY(features_by_species)
 
 		var/damage = rand(user.dna.species.punchdamagelow, user.dna.species.punchdamagehigh)
 
+		if(HAS_TRAIT(user, TRAIT_IN_POWERARMOUR))
+			damage += 15
+			user.dna.species.attack_sound = 'mojave/sound/ms13weapons/meleesounds/heavyblunt_hit1.ogg'
+			user.dna.species.punchstunthreshold = 24 //slightly higher knockdown chance
+
 		var/obj/item/bodypart/affecting = target.get_bodypart(ran_zone(user.zone_selected))
 
 		var/miss_chance = 100//calculate the odds that a punch misses entirely. considers stamina and brute damage of the puncher. punches miss by default to prevent weird cases
@@ -1359,11 +1377,9 @@ GLOBAL_LIST_EMPTY(features_by_species)
 			return FALSE
 
 		var/armor_block = target.run_armor_check(affecting, MELEE)
-		//MOJAVE EDIT BEGIN
 		var/armor_reduce = target.run_subarmor_check(affecting, MELEE)
 		var/subarmor_flags = target.get_subarmor_flags(affecting)
 		var/edge_protection = target.get_edge_protection(affecting)
-		//MOJAVE EDIT END
 
 		playsound(target.loc, user.dna.species.attack_sound, 25, TRUE, -1)
 
@@ -1380,11 +1396,10 @@ GLOBAL_LIST_EMPTY(features_by_species)
 
 		var/attack_direction = get_dir(user, target)
 		if(atk_effect == ATTACK_EFFECT_KICK)//kicks deal 1.5x raw damage
-			/* MOJAVE EDIT REMOVAL
-			target.apply_damage(damage*1.5, user.dna.species.attack_type, affecting, armor_block, attack_direction = attack_direction)
-			*/
-			//MOJAVE EDIT BEGIN
-			target.apply_damage(damage*1.5, \
+			var/no_defended = target.damage_armor(damage, MELEE, user.dna.species.attack_type, def_zone = user.zone_selected)
+			if((no_defended * 1.5) >= 9)
+				target.force_say()
+			target.apply_damage(no_defended*1.5, \
 								user.dna.species.attack_type, \
 								affecting, \
 								armor_block, \
@@ -1392,14 +1407,10 @@ GLOBAL_LIST_EMPTY(features_by_species)
 								reduced = armor_reduce, \
 								edge_protection = edge_protection, \
 								subarmor_flags = subarmor_flags)
-			//MOJAVE EDIT END
 			log_combat(user, target, "kicked")
 		else//other attacks deal full raw damage + 1.5x in stamina damage
-			/* MOJAVE EDIT REMOVAL
-			target.apply_damage(damage, user.dna.species.attack_type, affecting, armor_block, attack_direction = attack_direction)
-			*/
-			//MOJAVE EDIT BEGIN
-			target.apply_damage(damage, \
+			var/no_defended = target.damage_armor(damage, MELEE, user.dna.species.attack_type, def_zone = user.zone_selected)
+			target.apply_damage(no_defended, \
 								user.dna.species.attack_type, \
 								affecting, \
 								armor_block, \
@@ -1407,8 +1418,8 @@ GLOBAL_LIST_EMPTY(features_by_species)
 								reduced = armor_reduce, \
 								edge_protection = edge_protection, \
 								subarmor_flags = subarmor_flags)
-			//MOJAVE EDIT END
-			target.apply_damage(damage*1.5, STAMINA, affecting, armor_block)
+			if(no_defended >= 9)
+				target.force_say()
 			log_combat(user, target, "punched")
 
 		if((target.stat != DEAD) && damage >= user.dna.species.punchstunthreshold)
@@ -1442,34 +1453,34 @@ GLOBAL_LIST_EMPTY(features_by_species)
 /datum/species/proc/spec_hitby(atom/movable/AM, mob/living/carbon/human/H)
 	return
 
-/datum/species/proc/spec_attack_hand(mob/living/carbon/human/M, mob/living/carbon/human/H, datum/martial_art/attacker_style, modifiers)
-	if(!istype(M))
+/datum/species/proc/spec_attack_hand(mob/living/carbon/human/owner, mob/living/carbon/human/target, datum/martial_art/attacker_style, modifiers)
+	if(!istype(owner))
 		return
-	CHECK_DNA_AND_SPECIES(M)
-	CHECK_DNA_AND_SPECIES(H)
+	CHECK_DNA_AND_SPECIES(owner)
+	CHECK_DNA_AND_SPECIES(target)
 
-	if(!istype(M)) //sanity check for drones.
+	if(!istype(owner)) //sanity check for drones.
 		return
-	if(M.mind)
-		attacker_style = M.mind.martial_art
-	if((M != H) && M.combat_mode && H.check_shields(M, 0, M.name, attack_type = UNARMED_ATTACK))
-		log_combat(M, H, "attempted to touch")
-		H.visible_message(span_warning("[M] attempts to touch [H]!"), \
-						span_danger("[M] attempts to touch you!"), span_hear("You hear a swoosh!"), COMBAT_MESSAGE_RANGE, M)
-		to_chat(M, span_warning("You attempt to touch [H]!"))
+	if(owner.mind)
+		attacker_style = owner.mind.martial_art
+	if((owner != target) && owner.combat_mode && target.check_shields(owner, 0, owner.name, attack_type = UNARMED_ATTACK))
+		log_combat(owner, target, "attempted to touch")
+		target.visible_message(span_warning("[owner] attempts to touch [target]!"), \
+						span_danger("[owner] attempts to touch you!"), span_hear("You hear a swoosh!"), COMBAT_MESSAGE_RANGE, owner)
+		to_chat(owner, span_warning("You attempt to touch [target]!"))
 		return
 
-	SEND_SIGNAL(M, COMSIG_MOB_ATTACK_HAND, M, H, attacker_style)
+	SEND_SIGNAL(owner, COMSIG_MOB_ATTACK_HAND, owner, target, attacker_style)
 
 	if(LAZYACCESS(modifiers, RIGHT_CLICK))
-		disarm(M, H, attacker_style)
+		disarm(owner, target, attacker_style)
 		return // dont attack after
-	if(M.combat_mode)
-		harm(M, H, attacker_style)
+	if(owner.combat_mode)
+		harm(owner, target, attacker_style)
 	else
-		help(M, H, attacker_style)
+		help(owner, target, attacker_style)
 
-/datum/species/proc/spec_attacked_by(obj/item/I, mob/living/user, obj/item/bodypart/affecting, mob/living/carbon/human/H)
+/datum/species/proc/spec_attacked_by(obj/item/I, mob/living/user, obj/item/bodypart/affecting, mob/living/carbon/human/H, params)
 	// Allows you to put in item-specific reactions based on species
 	if(user != H)
 		if(H.check_shields(I, I.force, "the [I.name]", MELEE_ATTACK, I.armour_penetration))
@@ -1486,19 +1497,13 @@ GLOBAL_LIST_EMPTY(features_by_species)
 	hit_area = affecting.name
 	var/def_zone = affecting.body_zone
 
-	/* MOJAVE EDIT REMOVAL
-	var/armor_block = H.run_armor_check(affecting, MELEE, span_notice("Your armor has protected your [hit_area]!"), span_warning("Your armor has softened a hit to your [hit_area]!"),I.armour_penetration, weak_against_armour = I.weak_against_armour)
-	armor_block = min(90,armor_block) //cap damage reduction at 90%
-	*/
 	var/Iwound_bonus = I.wound_bonus
-	//MOJAVE EDIT BEGIN
 	var/armor_block = H.run_armor_check(affecting, MELEE, armour_penetration = I.armour_penetration, weak_against_armour = I.weak_against_armour)
 	armor_block = min(90,armor_block) //cap damage reduction at 90%
 	var/armor_reduce = H.run_subarmor_check(affecting, MELEE, armour_penetration = I.subtractible_armour_penetration, weak_against_armour = I.weak_against_subtractible_armour, sharpness = I.get_sharpness())
 	var/edge_protection = H.get_edge_protection(affecting)
 	edge_protection = max(0, edge_protection - I.edge_protection_penetration)
 	var/subarmor_flags = H.get_subarmor_flags(affecting)
-	//MOJAVE EDIT END
 
 	// this way, you can't wound with a surgical tool on help intent if they have a surgery active and are lying down, so a misclick with a circular saw on the wrong limb doesn't bleed them dry (they still get hit tho)
 	if((I.item_flags & SURGICAL_TOOL) && !user.combat_mode && H.body_position == LYING_DOWN && (LAZYLEN(H.surgeries) > 0))
@@ -1510,11 +1515,8 @@ GLOBAL_LIST_EMPTY(features_by_species)
 
 
 	var/attack_direction = get_dir(user, H)
-	/* MOJAVE EDIT REMOVAL
-	apply_damage(I.force * weakness, I.damtype, def_zone, armor_block, H, wound_bonus = Iwound_bonus, bare_wound_bonus = I.bare_wound_bonus, sharpness = I.get_sharpness(), attack_direction = attack_direction)
-	*/
-	//MOJAVE EDIT BEGIN
-	apply_damage(I.force * weakness, \
+	var/no_defended = H.damage_armor(I.force * weakness, MELEE, I.damtype, def_zone = def_zone)
+	apply_damage(no_defended, \
 				I.damtype, \
 				def_zone, \
 				armor_block, \
@@ -1526,6 +1528,16 @@ GLOBAL_LIST_EMPTY(features_by_species)
 				reduced = armor_reduce, \
 				edge_protection = edge_protection, \
 				subarmor_flags = subarmor_flags)
+
+	//COOL BABY BACK RIBS CODE HERE
+	var/list/modifiers = params2list(params)
+	if(can_be_mcribs && (def_zone == BODY_ZONE_CHEST) && LAZYACCESS(modifiers, RIGHT_CLICK) && \
+		!length(H.internal_organs) && (length(H.bodyparts) <= 1))
+		var/obj/item/bodypart/chest = H.get_bodypart(BODY_ZONE_CHEST)
+		if(chest?.get_damage() >= 100)
+			INVOKE_ASYNC(src, PROC_REF(try_to_mcrib), user, I, H)
+			return TRUE
+
 	//MOJAVE EDIT END
 
 	if(!I.force)
@@ -1545,25 +1557,6 @@ GLOBAL_LIST_EMPTY(features_by_species)
 
 		switch(hit_area)
 			if(BODY_ZONE_HEAD)
-				/* MOJAVE EDIT REMOVAL - Likely will remove this code once we're synced back upstream.
-				if(!I.get_sharpness() && armor_block < 50)
-					if(prob(I.force))
-						H.adjustOrganLoss(ORGAN_SLOT_BRAIN, 20)
-						if(H.stat == CONSCIOUS)
-							H.visible_message(span_danger("[H] is knocked senseless!"), \
-											span_userdanger("You're knocked senseless!"))
-							H.set_confusion(max(H.get_confusion(), 20))
-							H.adjust_blurriness(10)
-						if(prob(10))
-							H.gain_trauma(/datum/brain_trauma/mild/concussion)
-					else
-						H.adjustOrganLoss(ORGAN_SLOT_BRAIN, I.force * 0.2)
-
-					if(H.mind && H.stat == CONSCIOUS && H != user && prob(I.force + ((100 - H.health) * 0.5))) // rev deconversion through blunt trauma.
-						var/datum/antagonist/rev/rev = H.mind.has_antag_datum(/datum/antagonist/rev)
-						if(rev)
-							rev.remove_revolutionary(FALSE, user)
-				*/
 				if(bloody) //Apply blood
 					if(H.wear_mask)
 						H.wear_mask.add_mob_blood(H)
@@ -1576,13 +1569,6 @@ GLOBAL_LIST_EMPTY(features_by_species)
 						H.update_inv_glasses()
 
 			if(BODY_ZONE_CHEST)
-				/* MOJAVE EDIT REMOVAL - Likely will remove this code once we're synced back upstream.
-				if(H.stat == CONSCIOUS && !I.get_sharpness() && armor_block < 50)
-					if(prob(I.force))
-						H.visible_message(span_danger("[H] is knocked down!"), \
-									span_userdanger("You're knocked down!"))
-						H.apply_effect(60, EFFECT_KNOCKDOWN, armor_block)
-				*/
 				if(bloody)
 					if(H.wear_suit)
 						H.wear_suit.add_mob_blood(H)
@@ -1590,6 +1576,10 @@ GLOBAL_LIST_EMPTY(features_by_species)
 					if(H.w_uniform)
 						H.w_uniform.add_mob_blood(H)
 						H.update_inv_w_uniform()
+
+	/// Triggers force say events
+	if(I.force > 10 || I.force >= 5 && prob(33))
+		H.force_say(user)
 
 	return TRUE
 
@@ -1783,8 +1773,10 @@ GLOBAL_LIST_EMPTY(features_by_species)
  * * humi (required) The mob we will targeting
  */
 /datum/species/proc/body_temperature_alerts(mob/living/carbon/human/humi)
+	var/old_bodytemp = humi.old_bodytemperature
+	var/bodytemp = humi.bodytemperature
 	// Body temperature is too hot, and we do not have resist traits
-	if(humi.bodytemperature > bodytemp_heat_damage_limit && !HAS_TRAIT(humi, TRAIT_RESISTHEAT))
+	if(bodytemp > bodytemp_heat_damage_limit && !HAS_TRAIT(humi, TRAIT_RESISTHEAT))
 		// Clear cold mood and apply hot mood
 		SEND_SIGNAL(humi, COMSIG_CLEAR_MOOD_EVENT, "cold")
 		SEND_SIGNAL(humi, COMSIG_ADD_MOOD_EVENT, "hot", /datum/mood_event/hot)
@@ -1792,36 +1784,40 @@ GLOBAL_LIST_EMPTY(features_by_species)
 		//Remove any slowdown from the cold.
 		humi.remove_movespeed_modifier(/datum/movespeed_modifier/cold)
 		// display alerts based on how hot it is
-		switch(humi.bodytemperature)
-			if(bodytemp_heat_damage_limit to BODYTEMP_HEAT_WARNING_2)
-				humi.throw_alert(ALERT_TEMPERATURE, /atom/movable/screen/alert/hot, 1)
-			if(BODYTEMP_HEAT_WARNING_2 to BODYTEMP_HEAT_WARNING_3)
-				humi.throw_alert(ALERT_TEMPERATURE, /atom/movable/screen/alert/hot, 2)
-			else
-				humi.throw_alert(ALERT_TEMPERATURE, /atom/movable/screen/alert/hot, 3)
+		// Can't be a switch due to http://www.byond.com/forum/post/2750423
+		if(bodytemp in bodytemp_heat_damage_limit to BODYTEMP_HEAT_WARNING_2)
+			humi.throw_alert(ALERT_TEMPERATURE, /atom/movable/screen/alert/hot, 1)
+		else if(bodytemp in BODYTEMP_HEAT_WARNING_2 to BODYTEMP_HEAT_WARNING_3)
+			humi.throw_alert(ALERT_TEMPERATURE, /atom/movable/screen/alert/hot, 2)
+		else
+			humi.throw_alert(ALERT_TEMPERATURE, /atom/movable/screen/alert/hot, 3)
 
 	// Body temperature is too cold, and we do not have resist traits
-	else if(humi.bodytemperature < bodytemp_cold_damage_limit && !HAS_TRAIT(humi, TRAIT_RESISTCOLD))
+	else if(bodytemp < bodytemp_cold_damage_limit && !HAS_TRAIT(humi, TRAIT_RESISTCOLD))
 		// clear any hot moods and apply cold mood
 		SEND_SIGNAL(humi, COMSIG_CLEAR_MOOD_EVENT, "hot")
 		SEND_SIGNAL(humi, COMSIG_ADD_MOOD_EVENT, "cold", /datum/mood_event/cold)
 		// Apply cold slow down
 		humi.add_or_update_variable_movespeed_modifier(/datum/movespeed_modifier/cold, multiplicative_slowdown = ((bodytemp_cold_damage_limit - humi.bodytemperature) / COLD_SLOWDOWN_FACTOR))
 		// Display alerts based how cold it is
-		switch(humi.bodytemperature)
-			if(BODYTEMP_COLD_WARNING_2 to bodytemp_cold_damage_limit)
-				humi.throw_alert(ALERT_TEMPERATURE, /atom/movable/screen/alert/cold, 1)
-			if(BODYTEMP_COLD_WARNING_3 to BODYTEMP_COLD_WARNING_2)
-				humi.throw_alert(ALERT_TEMPERATURE, /atom/movable/screen/alert/cold, 2)
-			else
-				humi.throw_alert(ALERT_TEMPERATURE, /atom/movable/screen/alert/cold, 3)
+		// Can't be a switch due to http://www.byond.com/forum/post/2750423
+		if(bodytemp in BODYTEMP_COLD_WARNING_2 to bodytemp_cold_damage_limit)
+			humi.throw_alert(ALERT_TEMPERATURE, /atom/movable/screen/alert/cold, 1)
+		else if(bodytemp in BODYTEMP_COLD_WARNING_3 to BODYTEMP_COLD_WARNING_2)
+			humi.throw_alert(ALERT_TEMPERATURE, /atom/movable/screen/alert/cold, 2)
+		else
+			humi.throw_alert(ALERT_TEMPERATURE, /atom/movable/screen/alert/cold, 3)
 
 	// We are not to hot or cold, remove status and moods
-	else
+	else if (old_bodytemp > bodytemp_heat_damage_limit || old_bodytemp < bodytemp_cold_damage_limit)
 		humi.clear_alert(ALERT_TEMPERATURE)
 		humi.remove_movespeed_modifier(/datum/movespeed_modifier/cold)
 		SEND_SIGNAL(humi, COMSIG_CLEAR_MOOD_EVENT, "cold")
 		SEND_SIGNAL(humi, COMSIG_CLEAR_MOOD_EVENT, "hot")
+
+	// Store the old bodytemp for future checking
+	humi.old_bodytemperature = bodytemp
+
 
 /**
  * Used to apply wounds and damage based on core/body temp
@@ -1869,13 +1865,12 @@ GLOBAL_LIST_EMPTY(features_by_species)
 	if(humi.coretemperature < cold_damage_limit && !HAS_TRAIT(humi, TRAIT_RESISTCOLD))
 		var/damage_type = is_hulk ? BRUTE : BURN // Why?
 		var/damage_mod = coldmod * humi.physiology.cold_mod * (is_hulk ? HULK_COLD_DAMAGE_MOD : 1)
-		switch(humi.coretemperature)
-			if(201 to cold_damage_limit)
-				humi.apply_damage(COLD_DAMAGE_LEVEL_1 * damage_mod * delta_time, damage_type)
-			if(120 to 200)
-				humi.apply_damage(COLD_DAMAGE_LEVEL_2 * damage_mod * delta_time, damage_type)
-			else
-				humi.apply_damage(COLD_DAMAGE_LEVEL_3 * damage_mod * delta_time, damage_type)
+		if(humi.coretemperature in 201 to cold_damage_limit)
+			humi.apply_damage(COLD_DAMAGE_LEVEL_1 * damage_mod * delta_time, damage_type)
+		if(humi.coretemperature in 120 to 200)
+			humi.apply_damage(COLD_DAMAGE_LEVEL_2 * damage_mod * delta_time, damage_type)
+		else
+			humi.apply_damage(COLD_DAMAGE_LEVEL_3 * damage_mod * delta_time, damage_type)
 
 /**
  * Used to apply burn wounds on random limbs

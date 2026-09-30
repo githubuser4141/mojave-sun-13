@@ -108,7 +108,7 @@
 		bite_consumption = bite_consumption,\
 		microwaved_type = microwaved_type,\
 		junkiness = junkiness,\
-		after_eat = CALLBACK(src, .proc/after_eat))
+		after_eat = CALLBACK(src, PROC_REF(after_eat)))
 
 /obj/item/food/clothing/proc/after_eat(mob/eater)
 	var/obj/item/clothing/resolved_clothing = clothing.resolve()
@@ -212,7 +212,7 @@
 	if(iscarbon(loc))
 		var/mob/living/carbon/C = loc
 		C.visible_message(span_danger("The [zone_name] on [C]'s [src.name] is [break_verb] away!"), span_userdanger("The [zone_name] on your [src.name] is [break_verb] away!"), vision_distance = COMBAT_MESSAGE_RANGE)
-		RegisterSignal(C, COMSIG_MOVABLE_MOVED, .proc/bristle, override = TRUE)
+		RegisterSignal(C, COMSIG_MOVABLE_MOVED, PROC_REF(bristle), override = TRUE)
 
 	zones_disabled++
 	for(var/i in zone2body_parts_covered(def_zone))
@@ -260,7 +260,7 @@
 		return
 	if(slot_flags & slot) //Was equipped to a valid slot for this item?
 		if(iscarbon(user) && LAZYLEN(zones_disabled))
-			RegisterSignal(user, COMSIG_MOVABLE_MOVED, .proc/bristle, override = TRUE)
+			RegisterSignal(user, COMSIG_MOVABLE_MOVED, PROC_REF(bristle), override = TRUE)
 		for(var/trait in clothing_traits)
 			ADD_TRAIT(user, trait, "[CLOTHING_TRAIT] [REF(src)]")
 		if (LAZYLEN(user_vars_to_edit))
@@ -301,10 +301,10 @@
 			how_cool_are_your_threads += "[src]'s storage opens when clicked.\n"
 		else
 			how_cool_are_your_threads += "[src]'s storage opens when dragged to yourself.\n"
-		if (pockets.can_hold?.len) // If pocket type can hold anything, vs only specific items
+		/*if (pockets.can_hold?.len) // If pocket type can hold anything, vs only specific items
 			how_cool_are_your_threads += "[src] can store [pockets.max_items] <a href='?src=[REF(src)];show_valid_pocket_items=1'>item\s</a>.\n"
 		else
-			how_cool_are_your_threads += "[src] can store [pockets.max_items] item\s that are [weight_class_to_text(pockets.max_w_class)] or smaller.\n"
+			how_cool_are_your_threads += "[src] can store [pockets.max_items] item\s that are [weight_class_to_text(pockets.max_w_class)] or smaller.\n"*/ //Mojave Edit - This is dumb, doesn't apply to us, and would be annoying to change on a per suit basis so I'm just disabling it. It's pretty redundant anyways - Hekzder
 		if(pockets.quickdraw)
 			how_cool_are_your_threads += "You can quickly remove an item from [src] using Right-Click.\n"
 		if(pockets.silent)
@@ -386,7 +386,7 @@
 	if (armor_value < 0)
 		. = "-"
 	. += "\Roman[round(abs(armor_value), 10) / 10]"
-	return . */ //MOJAVE EDIT - Comments all of this out because, like with the weapon description proc, it is stupid and we shouldn't have it or should implement it in a better, less gamey way. 
+	return . */ //MOJAVE EDIT - Comments all of this out because, like with the weapon description proc, it is stupid and we shouldn't have it or should implement it in a better, less gamey way.
 
 /obj/item/clothing/atom_break(damage_flag)
 	. = ..()
@@ -485,7 +485,7 @@ BLIND     // can't see anything
 /obj/item/clothing/atom_destruction(damage_flag)
 	if(damage_flag == BOMB)
 		//so the shred survives potential turf change from the explosion.
-		addtimer(CALLBACK(src, .proc/_spawn_shreds), 1)
+		addtimer(CALLBACK(src, PROC_REF(_spawn_shreds)), 1)
 		deconstruct(FALSE)
 	if(damage_flag == CONSUME) //This allows for moths to fully consume clothing, rather than damaging it like other sources like brute
 		var/turf/current_position = get_turf(src)

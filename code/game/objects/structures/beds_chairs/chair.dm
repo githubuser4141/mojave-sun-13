@@ -18,14 +18,14 @@
 
 /obj/structure/chair/examine(mob/user)
 	. = ..()
-	. += span_notice("It's held together by a couple of <b>bolts</b>.")
+	//. += span_notice("It's held together by a couple of <b>bolts</b>.") // Mojave sun comment out- What the HELL why is this here instead of on the decon hint proc... Big shoutout.
 	if(!has_buckled_mobs() && can_buckle)
 		. += span_notice("While standing on [src], drag and drop your sprite onto [src] to buckle to it.")
 
 /obj/structure/chair/Initialize(mapload)
 	. = ..()
 	if(!anchored) //why would you put these on the shuttle?
-		addtimer(CALLBACK(src, .proc/RemoveFromLatejoin), 0)
+		addtimer(CALLBACK(src, PROC_REF(RemoveFromLatejoin)), 0)
 	if(prob(0.2))
 		name = "tactical [name]"
 	MakeRotate()
@@ -506,7 +506,7 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/structure/chair/stool/bar, 0)
 	Mob.pixel_y += 2
 	.=..()
 	if(iscarbon(Mob))
-		INVOKE_ASYNC(src, .proc/snap_check, Mob)
+		INVOKE_ASYNC(src, PROC_REF(snap_check), Mob)
 
 /obj/structure/chair/plastic/post_unbuckle_mob(mob/living/Mob)
 	Mob.pixel_y -= 2

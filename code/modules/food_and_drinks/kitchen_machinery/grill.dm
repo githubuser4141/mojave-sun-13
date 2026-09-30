@@ -36,11 +36,11 @@
 	return ..()
 
 /obj/machinery/grill/attackby(obj/item/I, mob/user)
-	if(istype(I, /obj/item/stack/sheet/ms13/plank) || istype(I, /obj/item/stack/sheet/ms13/scrap_wood)) //MOJAVE EDIT - Takes our wood instead of TG wood and coal. Revert after CAT
+	if(istype(I, /obj/item/stack/sheet/ms13/wood/plank) || istype(I, /obj/item/stack/sheet/ms13/wood/scrap_wood)) //MOJAVE EDIT - Takes our wood instead of TG wood and coal. Revert after CAT
 		var/obj/item/stack/S = I
 		var/stackamount = S.get_amount()
 		to_chat(user, span_notice("You put [stackamount] [I]s in [src]."))
-		if(istype(I, /obj/item/stack/sheet/ms13/plank)) //MOJAVE EDIT - Takes our wood instead of TG coal. Adjusted fuel amounts accordingly. Revert after CAT
+		if(istype(I, /obj/item/stack/sheet/ms13/wood/plank)) //MOJAVE EDIT - Takes our wood instead of TG coal. Adjusted fuel amounts accordingly. Revert after CAT
 			grill_fuel += (150 * stackamount)
 		else
 			grill_fuel += (50 * stackamount)
@@ -68,7 +68,7 @@
 			return
 		else if(!grilled_item && user.transferItemToLoc(I, src))
 			grilled_item = I
-			RegisterSignal(grilled_item, COMSIG_GRILL_COMPLETED, .proc/GrillCompleted)
+			RegisterSignal(grilled_item, COMSIG_GRILL_COMPLETED, PROC_REF(GrillCompleted))
 			ADD_TRAIT(grilled_item, TRAIT_FOOD_GRILLED, "boomers")
 			to_chat(user, span_notice("You put the [grilled_item] on [src]."))
 			update_appearance()

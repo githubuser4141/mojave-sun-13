@@ -164,12 +164,12 @@
 		diag_hud.add_to_hud(src)
 	diag_hud_set_electrified()
 
-	RegisterSignal(src, COMSIG_MACHINERY_BROKEN, .proc/on_break)
-	RegisterSignal(src, COMSIG_COMPONENT_NTNET_RECEIVE, .proc/ntnet_receive)
+	RegisterSignal(src, COMSIG_MACHINERY_BROKEN, PROC_REF(on_break))
+	RegisterSignal(src, COMSIG_COMPONENT_NTNET_RECEIVE, PROC_REF(ntnet_receive))
 
 	// Click on the floor to close airlocks
 	var/static/list/connections = list(
-		COMSIG_ATOM_ATTACK_HAND = .proc/on_attack_hand
+		COMSIG_ATOM_ATTACK_HAND = PROC_REF(on_attack_hand)
 	)
 	AddElement(/datum/element/connect_loc, connections)
 
@@ -269,9 +269,9 @@
 				return
 
 			if(density)
-				INVOKE_ASYNC(src, .proc/open)
+				INVOKE_ASYNC(src, PROC_REF(open))
 			else
-				INVOKE_ASYNC(src, .proc/close)
+				INVOKE_ASYNC(src, PROC_REF(close))
 
 		if("bolt")
 			if(command_value == "on" && locked)
@@ -437,7 +437,7 @@
 			secondsBackupPowerLost = 10
 	if(!spawnPowerRestoreRunning)
 		spawnPowerRestoreRunning = TRUE
-	INVOKE_ASYNC(src, .proc/handlePowerRestore)
+	INVOKE_ASYNC(src, PROC_REF(handlePowerRestore))
 	update_appearance()
 
 /obj/machinery/door/airlock/proc/loseBackupPower()
@@ -445,7 +445,7 @@
 		secondsBackupPowerLost = 60
 	if(!spawnPowerRestoreRunning)
 		spawnPowerRestoreRunning = TRUE
-	INVOKE_ASYNC(src, .proc/handlePowerRestore)
+	INVOKE_ASYNC(src, PROC_REF(handlePowerRestore))
 	update_appearance()
 
 /obj/machinery/door/airlock/proc/regainBackupPower()
@@ -581,14 +581,14 @@
 			if(!machine_stat)
 				update_icon(ALL, AIRLOCK_DENY)
 				playsound(src,doorDeni,50,FALSE,3)
-				addtimer(CALLBACK(src, /atom/proc/update_icon, ALL, AIRLOCK_CLOSED), AIRLOCK_DENY_ANIMATION_TIME)
+				addtimer(CALLBACK(src, TYPE_PROC_REF(/atom, update_icon), ALL, AIRLOCK_CLOSED), AIRLOCK_DENY_ANIMATION_TIME)
 
 /obj/machinery/door/airlock/examine(mob/user)
 	. = ..()
 	if(closeOtherId)
 		. += span_warning("This airlock cycles on ID: [sanitize(closeOtherId)].")
-	else if(!closeOtherId)
-		. += span_warning("This airlock does not cycle.")
+	else if(!closeOtherId) // MOJAVE SUN EDIT
+		. += span_warning("This airlock does not cycle.") // MOJAVE SUN EDIT
 	if(obj_flags & EMAGGED)
 		. += span_warning("Its access panel is smoking slightly.")
 	if(note)
@@ -752,7 +752,7 @@
 
 /obj/machinery/door/airlock/proc/on_attack_hand(atom/source, mob/user, list/modifiers)
 	SIGNAL_HANDLER
-	INVOKE_ASYNC(src, /atom/proc/attack_hand, user, modifiers)
+	INVOKE_ASYNC(src, TYPE_PROC_REF(/atom, attack_hand), user, modifiers)
 	return COMPONENT_CANCEL_ATTACK_CHAIN
 
 /obj/machinery/door/airlock/attack_hand(mob/user, list/modifiers)
@@ -1023,7 +1023,7 @@
 			user.visible_message(span_notice("[user] begins welding the airlock."), \
 							span_notice("You begin repairing the airlock..."), \
 							span_hear("You hear welding."))
-			if(W.use_tool(src, user, 40, volume=50, extra_checks = CALLBACK(src, .proc/weld_checks, W, user)))
+			if(W.use_tool(src, user, 40, volume=50, extra_checks = CALLBACK(src, PROC_REF(weld_checks), W, user)))
 				atom_integrity = max_integrity
 				set_machine_stat(machine_stat & ~BROKEN)
 				user.visible_message(span_notice("[user] finishes welding [src]."), \
@@ -1038,7 +1038,7 @@
 	user.visible_message(span_notice("[user] begins [welded ? "unwelding":"welding"] the airlock."), \
 		span_notice("You begin [welded ? "unwelding":"welding"] the airlock..."), \
 		span_hear("You hear welding."))
-	if(!tool.use_tool(src, user, 40, volume=50, extra_checks = CALLBACK(src, .proc/weld_checks, tool, user)))
+	if(!tool.use_tool(src, user, 40, volume=50, extra_checks = CALLBACK(src, PROC_REF(weld_checks), tool, user)))
 		return
 	welded = !welded
 	user.visible_message(span_notice("[user] [welded? "welds shut":"unwelds"] [src]."), \
@@ -1151,7 +1151,7 @@
 			if(axe && !axe.wielded)
 				to_chat(user, span_warning("You need to be wielding \the [axe] to do that!"))
 				return
-		INVOKE_ASYNC(src, (density ? .proc/open : .proc/close), 2)
+		INVOKE_ASYNC(src, (density ? PROC_REF(open) : PROC_REF(close)), 2)
 
 
 /obj/machinery/door/airlock/open(forced=0)
@@ -1164,7 +1164,7 @@
 		if(obj_flags & EMAGGED)
 			return FALSE
 		use_power(50)
-		playsound(src, doorOpen, 30, TRUE)
+		playsound(src, doorOpen, 30, FALSE) //MOJAVE SUN EDIT - ORIGINAL IS playsound(src, doorOpen, 30, TRUE)
 	else
 		playsound(src, 'sound/machines/airlockforced.ogg', 30, TRUE)
 
@@ -1175,7 +1175,7 @@
 		return TRUE
 
 	if(closeOther != null && istype(closeOther, /obj/machinery/door/airlock))
-		addtimer(CALLBACK(closeOther, .proc/close), 2)
+		addtimer(CALLBACK(closeOther, PROC_REF(close)), 2)
 
 	if(close_others)
 		for(var/obj/machinery/door/airlock/otherlock as anything in close_others)
@@ -1183,17 +1183,21 @@
 				if(otherlock.operating)
 					otherlock.delayed_close_requested = TRUE
 				else
-					addtimer(CALLBACK(otherlock, .proc/close), 2)
+					addtimer(CALLBACK(otherlock, PROC_REF(close)), 2)
 
 	if(cyclelinkedairlock)
 		if(!shuttledocked && !emergency && !cyclelinkedairlock.shuttledocked && !cyclelinkedairlock.emergency)
 			if(cyclelinkedairlock.operating)
 				cyclelinkedairlock.delayed_close_requested = TRUE
 			else
-				addtimer(CALLBACK(cyclelinkedairlock, .proc/close), 2)
+				addtimer(CALLBACK(cyclelinkedairlock, PROC_REF(close)), 2)
 
 	SEND_SIGNAL(src, COMSIG_AIRLOCK_OPEN, forced)
 	operating = TRUE
+	open_animation()
+	return TRUE
+
+/obj/machinery/door/airlock/proc/open_animation()
 	update_icon(ALL, AIRLOCK_OPENING, TRUE)
 	sleep(1)
 	set_opacity(0)
@@ -1208,9 +1212,7 @@
 	operating = FALSE
 	if(delayed_close_requested)
 		delayed_close_requested = FALSE
-		addtimer(CALLBACK(src, .proc/close), 1)
-	return TRUE
-
+		addtimer(CALLBACK(src, PROC_REF(close)), 1)
 
 /obj/machinery/door/airlock/close(forced = FALSE, force_crush = FALSE)
 	if(operating || welded || locked || seal)
@@ -1231,7 +1233,7 @@
 		if(obj_flags & EMAGGED)
 			return
 		use_power(50)
-		playsound(src, doorClose, 30, TRUE)
+		playsound(src, doorClose, 30, FALSE) // MOJAVE SUN EDIT - ORIGINAL IS playsound(src, doorClose, 30, TRUE)
 
 	else
 		playsound(src, 'sound/machines/airlockforced.ogg', 30, TRUE)
@@ -1241,6 +1243,10 @@
 		SSexplosions.med_mov_atom += killthis
 	SEND_SIGNAL(src, COMSIG_AIRLOCK_CLOSE, forced)
 	operating = TRUE
+	close_animation(dangerous_close)
+	return TRUE
+
+/obj/machinery/door/airlock/proc/close_animation(dangerous_close = FALSE)
 	update_icon(ALL, AIRLOCK_CLOSING, 1)
 	layer = CLOSED_DOOR_LAYER
 	if(air_tight)
@@ -1264,7 +1270,6 @@
 	delayed_close_requested = FALSE
 	if(!dangerous_close)
 		CheckForMobs()
-	return TRUE
 
 /obj/machinery/door/airlock/proc/prison_open()
 	if(obj_flags & EMAGGED)
@@ -1378,7 +1383,7 @@
 	secondsElectrified = seconds
 	diag_hud_set_electrified()
 	if(secondsElectrified > MACHINE_NOT_ELECTRIFIED)
-		INVOKE_ASYNC(src, .proc/electrified_loop)
+		INVOKE_ASYNC(src, PROC_REF(electrified_loop))
 
 	if(user)
 		var/message

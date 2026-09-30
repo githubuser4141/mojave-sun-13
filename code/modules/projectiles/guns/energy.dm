@@ -58,10 +58,10 @@
 	if(selfcharge)
 		START_PROCESSING(SSobj, src)
 	update_appearance()
-	RegisterSignal(src, COMSIG_ITEM_RECHARGED, .proc/instant_recharge)
+	RegisterSignal(src, COMSIG_ITEM_RECHARGED, PROC_REF(instant_recharge))
 
 /* /obj/item/gun/energy/add_weapon_description()
-	AddElement(/datum/element/weapon_description, attached_proc = .proc/add_notes_energy) //MOJAVE EDIT - Comments out this proc because weapon_description in general is commented out.
+	AddElement(/datum/element/weapon_description, attached_proc = PROC_REF(add_notes_energy) //MOJAVE EDIT - Comments out this proc because weapon_description in general is commented out.)
 
 /**
  *
@@ -154,7 +154,7 @@
 			if(!chambered.loaded_projectile)
 				chambered.newshot()
 
-/obj/item/gun/energy/handle_chamber()
+/obj/item/gun/energy/handle_chamber(empty_chamber = TRUE, from_firing = TRUE, chamber_next_round = TRUE, atom/shooter = null)
 	if(chambered && !chambered.loaded_projectile) //if loaded_projectile is null, i.e the shot has been fired...
 		var/obj/item/ammo_casing/energy/shot = chambered
 		cell.use(shot.e_cost)//... drain the cell cell

@@ -172,7 +172,7 @@
 	..()
 
 
-/mob/living/carbon/human/attacked_by(obj/item/I, mob/living/user)
+/mob/living/carbon/human/attacked_by(obj/item/I, mob/living/user, params)
 	if(!I || !user)
 		return FALSE
 
@@ -192,7 +192,7 @@
 	SSblackbox.record_feedback("tally", "zone_targeted", 1, target_area)
 
 	// the attacked_by code varies among species
-	return dna.species.spec_attacked_by(I, user, affecting, src)
+	return dna.species.spec_attacked_by(I, user, affecting, src, params)
 
 
 /mob/living/carbon/human/attack_hulk(mob/living/carbon/human/user)
@@ -361,7 +361,8 @@
 	var/subarmor = run_subarmor_check(affecting, MELEE, armour_penetration = user.subtractible_armour_penetration, sharpness = user.sharpness)
 	var/subarmor_flags = get_subarmor_flags(affecting)
 	var/edge_protection = get_edge_protection(affecting)
-	apply_damage(damage, user.melee_damage_type, affecting, armor, \
+	var/no_defended = damage_armor(damage, MELEE, user.melee_damage_type, def_zone = dam_zone)
+	apply_damage(no_defended, user.melee_damage_type, affecting, armor, \
 				wound_bonus = user.wound_bonus, bare_wound_bonus = user.bare_wound_bonus, \
 				sharpness = user.sharpness, attack_direction = attack_direction, \
 				subarmor_flags = subarmor_flags, edge_protection = edge_protection, \
@@ -390,7 +391,8 @@
 	var/subarmor = run_subarmor_check(affecting, MELEE, armour_penetration = user.subtractible_armour_penetration, sharpness = user.sharpness)
 	var/subarmor_flags = get_subarmor_flags(affecting)
 	var/edge_protection = get_edge_protection(affecting)
-	apply_damage(damage, user.melee_damage_type, affecting, armor, \
+	var/no_defended = damage_armor(damage, MELEE, user.melee_damage_type, def_zone = dam_zone)
+	apply_damage(no_defended, user.melee_damage_type, affecting, armor, \
 				wound_bonus = user.wound_bonus, bare_wound_bonus = user.bare_wound_bonus, \
 				sharpness = user.sharpness, attack_direction = attack_direction, \
 				subarmor_flags = subarmor_flags, edge_protection = edge_protection, \
@@ -433,7 +435,7 @@
 		return
 	var/brute_loss = 0
 	var/burn_loss = 0
-	var/bomb_armor = getarmor(null, BOMB)
+	var/bomb_armor = getallsubarmor(CUTTING)
 
 //200 max knockdown for EXPLODE_HEAVY
 //160 max knockdown for EXPLODE_LIGHT
@@ -451,33 +453,36 @@
 						if(EXPLODE_LIGHT)
 							SSexplosions.low_mov_atom += thing
 				gib()
+				throw_alert_text(/atom/movable/screen/alert/text/dead, "HOLY SHI-", override = FALSE) // MOJAVE SUN EDIT - FO text alert
 				return
 			else
 				brute_loss = 500
 				var/atom/throw_target = get_edge_target_turf(src, get_dir(src, get_step_away(src, src)))
 				throw_at(throw_target, 200, 4)
-				damage_clothes(400 - bomb_armor, BRUTE, BOMB)
+				damage_clothes(max(400 - bomb_armor, round(bomb_armor * 0.05, 1)), BRUTE, CUTTING)
 
 		if (EXPLODE_HEAVY)
+			throw_alert_text(/atom/movable/screen/alert/text/sad, "What the f-", override = FALSE) // MOJAVE SUN EDIT - FO text alert
 			brute_loss = 60
 			burn_loss = 60
 			if(bomb_armor)
 				brute_loss = 30*(2 - round(bomb_armor*0.01, 0.05))
 				burn_loss = brute_loss //damage gets reduced from 120 to up to 60 combined brute+burn
-			damage_clothes(200 - bomb_armor, BRUTE, BOMB)
+			damage_clothes(max(200 - bomb_armor, round(bomb_armor * 0.05, 1)), BRUTE, CUTTING)
 			if (ears && !HAS_TRAIT_FROM(src, TRAIT_DEAF, CLOTHING_TRAIT))
 				ears.adjustEarDamage(30, 120)
 			Unconscious(20) //short amount of time for follow up attacks against elusive enemies like wizards
-			Knockdown(200 - (bomb_armor * 1.6)) //between ~4 and ~20 seconds of knockdown depending on bomb armor
+			Knockdown(max(200 - (bomb_armor * 1.6), round(bomb_armor * 0.05, 1))) //between ~4 and ~20 seconds of knockdown depending on bomb armor
 
 		if(EXPLODE_LIGHT)
+			throw_alert_text(/atom/movable/screen/alert/text/nohappy, "That's not good!", override = FALSE) // MOJAVE SUN EDIT - FO text alert
 			brute_loss = 30
 			if(bomb_armor)
 				brute_loss = 15*(2 - round(bomb_armor*0.01, 0.05))
-			damage_clothes(max(50 - bomb_armor, 0), BRUTE, BOMB)
+			damage_clothes(max(50 - bomb_armor, 0), BRUTE, CUTTING)
 			if (ears && !HAS_TRAIT_FROM(src, TRAIT_DEAF, CLOTHING_TRAIT))
 				ears.adjustEarDamage(15,60)
-			Knockdown(160 - (bomb_armor * 1.6)) //100 bomb armor will prevent knockdown altogether
+			Knockdown(max(160 - (bomb_armor * 1.6), round(bomb_armor * 0.05, 1))) //100 bomb armor will prevent knockdown altogether
 
 	take_overall_damage(brute_loss,burn_loss)
 
@@ -500,7 +505,7 @@
 				probability = 50
 		for(var/X in bodyparts)
 			var/obj/item/bodypart/BP = X
-			if(prob(probability) && !prob(getarmor(BP, BOMB)) && BP.body_zone != BODY_ZONE_HEAD && BP.body_zone != BODY_ZONE_CHEST)
+			if(prob(probability) && !prob(getsubarmor(BP, CUTTING)) && BP.body_zone != BODY_ZONE_HEAD && BP.body_zone != BODY_ZONE_CHEST && !istype(BP.owner:wear_suit, /obj/item/clothing/suit/space/hardsuit/ms13/power_armor))
 				BP.brute_dam = BP.max_damage
 				BP.dismember()
 				max_limb_loss--
@@ -996,6 +1001,23 @@
 			leg_clothes = wear_suit
 		if(leg_clothes)
 			torn_items |= leg_clothes
+
+	var/power_armor_safe = FALSE
+	for(var/obj/item/I in torn_items)
+		if(istype(I, /obj/item/clothing/suit/space/hardsuit/ms13/power_armor))
+			var/obj/item/clothing/suit/space/hardsuit/ms13/power_armor/pa = I
+			I.take_damage(damage_amount, damage_type, damage_flag, 0)
+			for(var/part_zone as anything in pa.module_armor)
+				if(part_zone == BODY_ZONE_HEAD)
+					continue
+				var/obj/item/ms13/power_armor/PA_part = pa.module_armor[part_zone]
+				if(PA_part != null)
+					PA_part.take_damage(damage_amount, damage_type, damage_flag, 0)
+			power_armor_safe = TRUE
+
+	//POWER_ARMOR SAFE ITEMS ON YOUR SLOTS
+	if(power_armor_safe)
+		return
 
 	for(var/obj/item/I in torn_items)
 		I.take_damage(damage_amount, damage_type, damage_flag, 0)

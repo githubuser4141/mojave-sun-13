@@ -1,13 +1,13 @@
 #define WALL_SMOOTHING SMOOTH_GROUP_MS13_SIDEWALK, SMOOTH_GROUP_MS13_WALL, SMOOTH_GROUP_MS13_WALL_METAL, SMOOTH_GROUP_MS13_WALL_WOOD, SMOOTH_GROUP_MS13_WALL_SCRAP, SMOOTH_GROUP_MS13_LOW_WALL,SMOOTH_GROUP_MS13_WALL_ADOBE, SMOOTH_GROUP_MS13_WALL_BRICK, SMOOTH_GROUP_MS13_WALL_REINFORCED, SMOOTH_GROUP_MS13_WINDOW, SMOOTH_GROUP_MS13_MINERALS
 #define DESERT_SMOOTHING SMOOTH_GROUP_MS13_DESERT, SMOOTH_GROUP_MS13_SIDEWALK, SMOOTH_GROUP_MS13_TILE, SMOOTH_GROUP_MS13_SNOW, SMOOTH_GROUP_MS13_ROAD, SMOOTH_GROUP_MS13_WATER
-#define GRASS_SPONTANEOUS 		2
-#define GRASS_WEIGHT 			2
-#define SHROOM_WEIGHT			5
-#define LUSH_PLANT_SPAWN_LIST list(/obj/structure/flora/ms13/tree/tallpine/snow = 7, /obj/structure/flora/ms13/forage/xander = 1, /obj/structure/flora/ms13/forage/brocflower = 1, /obj/structure/flora/ms13/forage/tarberry = 1, /obj/structure/flora/ms13/forage/blackberry = 1, /obj/structure/flora/ms13/forage/mutfruit = 1, /obj/structure/flora/ms13/forage/ashrose = 1, /obj/structure/flora/ms13/forage/wildcarrot = 1, /obj/structure/flora/ms13/forage/aster = 1)
+#define GRASS_SPONTANEOUS 		2.5
+#define GRASS_WEIGHT 			2.4
+#define SHROOM_WEIGHT			4.8
+#define LUSH_PLANT_SPAWN_LIST list(/obj/structure/flora/ms13/tree/tallpine/snow = 8, /obj/structure/flora/ms13/forage/xander = 1, /obj/structure/flora/ms13/forage/brocflower = 1, /obj/structure/flora/ms13/forage/tarberry = 1, /obj/structure/flora/ms13/forage/blackberry = 1, /obj/structure/flora/ms13/forage/mutfruit = 1, /obj/structure/flora/ms13/forage/ashrose = 1, /obj/structure/flora/ms13/forage/wildcarrot = 1, /obj/structure/flora/ms13/forage/aster = 1, /obj/structure/flora/grass/wasteland/snow = 5)
 #define DESOLATE_PLANT_SPAWN_LIST list(/obj/structure/flora/grass/wasteland/snow = 10)
-#define MUSHROOM_SPAWN_LIST list(/obj/structure/flora/ms13/forage/mushroom = 5, /obj/structure/flora/ms13/forage/mushroom/glowing = 5, /obj/structure/flora/ms13/forage/brainshroom = 1, /obj/structure/flora/ms13/forage/fireshroom = 1,/obj/structure/flora/ms13/forage/gutshroom = 1, /obj/structure/flora/ms13/forage/lure = 1, /obj/structure/flora/ms13/forage/nara= 1)
-#define DESERT_LUSH_PLANT_SPAWN_LIST list(/obj/structure/flora/ms13/tree/joshua = 2, /obj/structure/flora/ms13/tree/cactus = 5, /obj/structure/ms13/turfdecor/drought = 10)
-#define DESERT_DESOLATE_PLANT_SPAWN_LIST list(/obj/structure/flora/grass/wasteland = 8)
+#define MUSHROOM_SPAWN_LIST list(/obj/structure/flora/ms13/forage/mushroom = 5, /obj/structure/flora/ms13/forage/mushroom/glowing = 3, /obj/structure/flora/ms13/forage/brainshroom = 1.5, /obj/structure/flora/ms13/forage/fireshroom = 0.5, /obj/structure/flora/ms13/forage/gutshroom = 1.5, /obj/structure/flora/ms13/forage/blight = 1.5, /obj/structure/flora/ms13/forage/nara = 1.5)
+#define DESERT_LUSH_PLANT_SPAWN_LIST list(/obj/structure/flora/grass/wasteland = 2.5, /obj/structure/flora/ms13/tree/drought/dead = 2, /obj/structure/flora/ms13/cactus = 2.5, /obj/structure/flora/ms13/cactus/tall = 2.5, /obj/structure/flora/ms13/leafy = 2, /obj/structure/flora/ms13/forage/xander/drought = 1.5, /obj/structure/flora/ms13/forage/brocflower/drought = 1.5, /obj/structure/flora/ms13/forage/ashrose/drought = 1, /obj/structure/flora/ms13/forage/aster/drought = 1, /obj/structure/flora/ms13/forage/yucca = 1.5, /obj/structure/flora/ms13/forage/barrel_cactus = 2)
+#define DESERT_DESOLATE_PLANT_SPAWN_LIST list(/obj/structure/flora/grass/wasteland = 6, /obj/structure/flora/ms13/leafy = 1, /obj/structure/flora/ms13/cactus = 1, /obj/structure/flora/ms13/cactus/tall = 1)
 
 #define TURF_LAYER_SNOW 2.003
 #define TURF_LAYER_SNOW_BORDER 2.2
@@ -101,7 +101,7 @@
 
 /turf/open/floor/plating/ms13/ground/desert/Initialize()
 	. = ..()
-	addtimer(CALLBACK(src, /atom/.proc/update_icon), 1)
+	addtimer(CALLBACK(src, TYPE_PROC_REF(/atom, update_icon)), 1)
 	//If no fences, machines (soil patches are machines), etc. try to plant grass
 	if(!((locate(/obj/structure) in src) || (locate(/obj/machinery) in src)))
 		plantGrass()
@@ -122,6 +122,17 @@
 
 	add_overlay(image(border_icon, icon_state, TURF_LAYER_DESERT_BORDER, pixel_x = -16, pixel_y = -16))
 
+/turf/open/floor/plating/ms13/ground/desert/attackby(obj/item/W, mob/user, params)
+	. = ..()
+	if(!.)
+		if(W.tool_behaviour == TOOL_SHOVEL)
+			to_chat(user, span_notice("You start digging the outlines of a grave."))
+			if(do_after(user, 4 SECONDS * W.toolspeed, target = src))
+				user.visible_message(span_notice("[user] dug out the outlines of a grave."),
+										span_notice("You dug out the outlines of a grave."))
+				new /obj/structure/closet/ms13/grave(src)
+
+/*
 /turf/open/floor/plating/ms13/ground/desert/attackby(obj/item/W, mob/user, params)
 	. = ..()
 	if(!.)
@@ -150,7 +161,7 @@
 	new digResult(src, 5)
 	icon_state = "[icon_state]_dug"
 	dug = TRUE
-
+*/
 //Pass PlantForce for admin stuff I guess?
 /turf/open/floor/plating/ms13/ground/proc/plantGrass(Plantforce = FALSE)
 	var/Weight = 0
@@ -204,6 +215,16 @@
 	if(!((locate(/obj/structure) in src) || (locate(/obj/machinery) in src)))
 		plantGrass()
 
+/turf/open/floor/plating/ms13/ground/desertalt/attackby(obj/item/W, mob/user, params)
+	. = ..()
+	if(!.)
+		if(W.tool_behaviour == TOOL_SHOVEL)
+			to_chat(user, span_notice("You start digging the outlines of a grave."))
+			if(do_after(user, 4 SECONDS * W.toolspeed, target = src))
+				user.visible_message(span_notice("[user] dug out the outlines of a grave."),
+										span_notice("You dug out the outlines of a grave."))
+				new /obj/structure/closet/ms13/grave(src)
+
 /turf/open/floor/plating/ms13/ground/snow
 	name = "snow"
 	desc = "Fresh powder."
@@ -223,7 +244,7 @@
 
 /turf/open/floor/plating/ms13/ground/snow/Initialize()
 	. = ..()
-	addtimer(CALLBACK(src, /atom/.proc/update_icon), 1)
+	addtimer(CALLBACK(src, TYPE_PROC_REF(/atom, update_icon)), 1)
 	curr_area = get_area(src)
 	if(!((locate(/obj/structure) in src) || (locate(/obj/machinery) in src) || (locate(/obj/structure/flora) in src)))
 		plant_grass()
@@ -404,12 +425,12 @@
 
 /turf/open/floor/plating/ms13/ground/road/Initialize()
 	. = ..()
-	addtimer(CALLBACK(src, /atom/.proc/update_icon), 1)
+	addtimer(CALLBACK(src, TYPE_PROC_REF(/atom, update_icon)), 1)
 
 /turf/open/floor/plating/ms13/ground/road/update_icon()
 	. = ..() //Inheritance required for road decals
-	var/rand_icon = rand(1,4)
-	var/crack_randomiser = "crack_[rand(1,18)]"
+	var/rand_icon = rand(1,3)
+	var/crack_randomiser = "crack_[rand(1,24)]"
 	var/road_randomiser = rand(-10,10)
 	var/direction_randomiser = rand(0,8)
 
@@ -423,9 +444,6 @@
 		if(3)
 			icon = 'mojave/icons/turf/64x/road_3.dmi'
 			border_icon = 'mojave/icons/turf/64x/road_3_border.dmi'
-		if(4)
-			icon = 'mojave/icons/turf/64x/road_4.dmi'
-			border_icon = 'mojave/icons/turf/64x/road_4_border.dmi'
 
 	if(prob(20))
 		add_overlay(image('mojave/icons/turf/road.dmi', crack_randomiser, TURF_LAYER_ROAD_DECAL, direction_randomiser, road_randomiser, road_randomiser))
@@ -448,8 +466,9 @@
 
 /turf/open/floor/plating/ms13/ground/sidewalk/Initialize()
 	. = ..()
-	addtimer(CALLBACK(src, /atom/.proc/update_icon), 1)
+	addtimer(CALLBACK(src, TYPE_PROC_REF(/atom, update_icon)), 1)
 
+/*
 /turf/open/floor/plating/ms13/ground/sidewalk/update_icon()
 	. = ..()
 	add_overlay(image('mojave/icons/turf/curb.dmi', icon_state, FLOAT_LAYER))
@@ -462,7 +481,7 @@
 
 /turf/open/floor/plating/ms13/ground/sidewalk/cracked/Initialize()
 	. = ..()
-	icon_state = "crack_[rand(1,11)]"
+	icon_state = "crack_[rand(1,11)]"*/
 
 ////Roofing////
 
@@ -554,7 +573,7 @@
 
 /turf/open/floor/plating/ms13/ground/ice/Initialize()
 	. = ..()
-	addtimer(CALLBACK(src, /atom/.proc/update_icon), 1)
+	addtimer(CALLBACK(src, TYPE_PROC_REF(/atom, update_icon)), 1)
 	MakeSlippery(TURF_WET_WATER, INFINITY, 0, INFINITY, TRUE, overlay = FALSE)
 
 /turf/open/floor/plating/ms13/ground/ice/MakeSlippery(wet_setting, min_wet_time, wet_time_to_add, max_wet_time, permanent, overlay)
@@ -619,6 +638,8 @@
 	plane = FLOOR_PLANE
 	layer = TURF_LAYER_WATER_BASE
 	slowdown = 0.5
+	// What type of water it'll give you when you fill a container from it.
+	var/dispensedreagent = /datum/reagent/consumable/ms13/water/unfiltered
 	var/next_splash = 1
 	var/atom/watereffect = /obj/effect/overlay/ms13/water/medium
 	var/atom/watertop = /obj/effect/overlay/ms13/water/top/medium
@@ -661,6 +682,16 @@ GLOBAL_VAR(FishPopNextCalc)
 			to_chat(user, "<span class='notice'>You reel in your catch.</span>")
 			getFished(user)
 
+	if(istype(W, /obj/item/reagent_containers))
+		var/obj/item/reagent_containers/container = W
+		if(container.is_refillable())
+			if(!container.reagents.holder_full())
+				container.reagents.add_reagent(dispensedreagent, min(container.volume - container.reagents.total_volume, container.amount_per_transfer_from_this))
+				to_chat(user, span_notice("You fill [container] from [src]."))
+				return TRUE
+			to_chat(user, span_notice("\The [container] is full."))
+			return FALSE
+
 /turf/open/ms13/water/proc/getFished(mob/user)
 	var/spawnFish = pick_weight(fish)
 	new spawnFish(user.loc)
@@ -698,10 +729,8 @@ GLOBAL_VAR(FishPopNextCalc)
 
 /turf/open/ms13/water/Initialize()
 	. = ..()
-	create_reagents(1000)
 	new watereffect(src)
 	new watertop(src)
-	reagents.add_reagent(/datum/reagent/consumable/ms13/unfiltered_water, 1000)
 
 /obj/effect/overlay/ms13/water
 	name = "water"
@@ -772,7 +801,7 @@ GLOBAL_VAR(FishPopNextCalc)
 									"<span class='notice'>You start lowering yourself in the deep water.</span>")
 					if(do_mob(user, M, 20))
 						M.swimming = TRUE
-						addtimer(CALLBACK(src, .proc/transfer_mob_layer, M), 0.2 SECONDS)
+						addtimer(CALLBACK(src, PROC_REF(transfer_mob_layer), M), 0.2 SECONDS)
 						M.forceMove(src)
 						to_chat(user, "<span class='notice'>You lower yourself in the deep water.</span>")
 						//M.adjust_bodytemperature(coldness)
@@ -782,7 +811,7 @@ GLOBAL_VAR(FishPopNextCalc)
 									"<span class='notice'>You start lowering [M] in the deep water.")
 					if(do_mob(user, M, 20))
 						M.swimming = TRUE
-						addtimer(CALLBACK(src, .proc/transfer_mob_layer, M), 0.2 SECONDS)
+						addtimer(CALLBACK(src, PROC_REF(transfer_mob_layer), M), 0.2 SECONDS)
 						M.forceMove(src)
 						to_chat(user, "<span class='notice'>You lower [M] in the deep water.</span>")
 						//M.adjust_bodytemperature(coldness)
@@ -808,7 +837,7 @@ GLOBAL_VAR(FishPopNextCalc)
 	if(isliving(A))
 		var/mob/living/M = A
 		var/mob/living/carbon/H = M
-		addtimer(CALLBACK(src, .proc/transfer_mob_layer, M), 0.2 SECONDS)
+		addtimer(CALLBACK(src, PROC_REF(transfer_mob_layer), M), 0.2 SECONDS)
 		if(!(M.swimming))
 			switch(depth)
 				if(3)
@@ -885,6 +914,7 @@ GLOBAL_VAR(FishPopNextCalc)
 	name = "sewer water"
 	desc = "Murky and foul smelling water, if you could call it that."
 	baseturfs = /turf/open/ms13/water/sewer
+	dispensedreagent = /datum/reagent/consumable/ms13/water/dirty
 	fish = list(/obj/item/food/meat/slab/ms13/fish/lamprey = 2,
 		/obj/item/food/meat/slab/ms13/fish/largemouth = 1,
 		/obj/item/food/meat/slab/ms13/fish/chum = 3,

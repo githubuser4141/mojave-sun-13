@@ -589,6 +589,9 @@ Remember to update _globalvars/traits.dm if you're adding/removing/renaming trai
 /// Hearing trait that is from the hearing component
 #define CIRCUIT_HEAR_TRAIT "circuit_hear"
 
+/// This trait comes from when a mob is currently typing.
+#define CURRENTLY_TYPING_TRAIT "currently_typing"
+
 /// PDA Traits. This one makes PDAs explode if the user opens the messages menu
 #define TRAIT_PDA_MESSAGE_MENU_RIGGED "pda_message_menu_rigged"
 /// This one denotes a PDA has received a rigged message and will explode when the user tries to reply to a rigged PDA message
@@ -848,12 +851,34 @@ Remember to update _globalvars/traits.dm if you're adding/removing/renaming trai
 /// This mob heals from cult pylons.
 #define TRAIT_HEALS_FROM_CULT_PYLONS "heals_from_cult_pylons"
 
+/// Trait given to a mob that is currently thinking (giving off the "thinking" icon), used in an IC context
+#define TRAIT_THINKING_IN_CHARACTER "currently_thinking_IC"
 
-// MOJAVE JOB TRAITS START
+// MOJAVE TRAITS START
 
 
 #define TRAIT_MEDICAL_TRAINING "medical_training" //Trait for medical jobs that allows better crafting of medical items
 
 #define TRAIT_SCRIBE_TRAINING "scribe_training" //Trait for BoS Scribes that allows better electronics crafting
+
+#define TRAIT_LEGION_SMITHING "legion_smithing" //Trait for Legion Blacksmith to make Legion weapon recipes
+
+#define TRAIT_DRY_SHAMAN "drylander_shaman" //Trait for the Drylander Shaman to make ammo
+
+#define TRAIT_SNOWCREST_TAILOR "snowcrest_tailor" //Trait for Snowcrest workers to tailor stuff
+
+#define TRAIT_DRUGGIE "drug_crafting" //Trait for drug crafting
+
+#define TRAIT_GOLDQM "goldman_quartermaster" //Trait for goldman QM to make ammo
+
+#define TRAIT_NON_FLAMMABLE "non_flammable" //An actual real fireproof trait
+
+#define TRAIT_IN_POWERARMOUR "in_powerarmour" //If this person is wearing power armour actively
+
+#define TRAIT_WEARING_GAS_MASK "wearing_gasmask" //If this person is wearing a gas mask
+
+#define TRAIT_PROTECTIVE_SUIT "wearing_protection" //If this person is wearing a suit that would render them immune from... CHEMICAL WARFARE
+
+#define TRAIT_SHOVEIMMUNE "shove_immune"//Makes the user completely immune to shoving
 
 // MOJAVE JOB TRAITS END

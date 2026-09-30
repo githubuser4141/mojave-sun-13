@@ -41,7 +41,7 @@
 
 /obj/item/food/cheese/Initialize(mapload)
 	. = ..()
-	RegisterSignal(src, COMSIG_RAT_INTERACT, .proc/on_rat_eat)
+	RegisterSignal(src, COMSIG_RAT_INTERACT, PROC_REF(on_rat_eat))
 
 /obj/item/food/cheese/proc/on_rat_eat(datum/source, mob/living/simple_animal/hostile/regalrat/king)
 	SIGNAL_HANDLER
@@ -189,18 +189,23 @@
 	. = ..()
 	AddElement(/datum/element/dunkable, 10)
 
-/obj/item/food/badrecipe
+/obj/item/food/badrecipe //Mojave Edit - Replaced this with our sprite as it's 10x easier than replacing every instance of burned food with ours.
 	name = "burned mess"
 	desc = "Someone should be demoted from cook for this."
-	icon_state = "badrecipe"
 	food_reagents = list(/datum/reagent/toxin/bad_food = 30)
 	foodtypes = GROSS
+	icon = 'mojave/icons/effects/gurps.dmi'
+	icon_state = "rot_1"
 	w_class = WEIGHT_CLASS_SMALL
+	grid_height = 32
+	grid_width = 32
 	preserved_food = TRUE //Can't decompose any more than this
 
-/obj/item/food/badrecipe/Initialize(mapload)
+/obj/item/food/badrecipe/Initialize()
 	. = ..()
-	RegisterSignal(src, COMSIG_ITEM_GRILLED, .proc/OnGrill)
+	icon_state = "rot_[rand(1,4)]"
+	AddElement(/datum/element/item_scaling, 0.65, 1)
+	RegisterSignal(src, COMSIG_ITEM_GRILLED, PROC_REF(OnGrill))
 
 /obj/item/food/badrecipe/moldy
 	name = "moldy mess"
@@ -269,7 +274,7 @@
 	icon_state = "spidereggs"
 	food_reagents = list(/datum/reagent/consumable/nutriment/protein = 4)
 	tastes = list("cobwebs" = 1)
-	foodtypes = MEAT 
+	foodtypes = MEAT
 	w_class = WEIGHT_CLASS_TINY
 
 /obj/item/food/spiderling
@@ -505,7 +510,7 @@
 				bite_consumption = bite_consumption,\
 				microwaved_type = microwaved_type,\
 				junkiness = junkiness,\
-				on_consume = CALLBACK(src, .proc/OnConsume))
+				on_consume = CALLBACK(src, PROC_REF(OnConsume)))
 
 /obj/item/food/bubblegum/bubblegum/proc/OnConsume(mob/living/eater, mob/living/feeder)
 	if(iscarbon(eater))
@@ -728,7 +733,7 @@
 				bite_consumption = bite_consumption,\
 				microwaved_type = microwaved_type,\
 				junkiness = junkiness,\
-				check_liked = CALLBACK(src, .proc/check_liked))
+				check_liked = CALLBACK(src, PROC_REF(check_liked)))
 
 /obj/item/food/rationpack/proc/check_liked(fraction, mob/mob) //Nobody likes rationpacks. Nobody.
 	return FOOD_DISLIKED

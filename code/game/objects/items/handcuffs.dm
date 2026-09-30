@@ -11,6 +11,8 @@
 	breakouttime = 1 MINUTES
 	dye_color = DYE_PRISONER
 	icon = 'icons/obj/restraints.dmi'
+	var/handcuffed_icon = 'icons/mob/mob.dmi'
+	var/handcuffed_icon_state = "handcuffs1"
 
 /obj/item/restraints/suicide_act(mob/living/carbon/user)
 	user.visible_message(span_suicide("[user] is strangling [user.p_them()]self with [src]! It looks like [user.p_theyre()] trying to commit suicide!"))
@@ -45,6 +47,8 @@
 	var/cuffsound = 'sound/weapons/handcuffs.ogg'
 	///If set, handcuffs will be destroyed on application and leave behind whatever this is set to.
 	var/trashtype = null
+	var/cuff_time = 5 SECONDS //MOJAVE SUN EDIT - Handcuffs
+	var/cuff_verb = "handcuff" //MOJAVE SUN EDIT - Handcuffs - lord do I wait for the day they make handcuffing a component
 
 /obj/item/restraints/handcuffs/attack(mob/living/carbon/C, mob/living/user)
 	if(!istype(C))
@@ -59,28 +63,33 @@
 
 	if(!C.handcuffed)
 		if(C.canBeHandcuffed())
-			C.visible_message(span_danger("[user] is trying to put [name] on [C]!"), \
-								span_userdanger("[user] is trying to put [name] on you!"))
+			//MOJAVE SUN EDIT - Handcuffs
+			C.visible_message(span_danger("[user] is trying to [cuff_verb] [C]!"), \
+								span_userdanger("[user] is trying to [cuff_verb] you!"))
 			if(C.is_blind())
-				to_chat(C, span_userdanger("You feel someone grab your wrists, the cold metal of [name] starting to dig into your skin!"))
+				to_chat(C, span_userdanger("You feel someone grab your wrists, the [name] starting to dig into your skin!"))
 			playsound(loc, cuffsound, 30, TRUE, -2)
-			log_combat(user, C, "attempted to handcuff")
-			if(do_mob(user, C, 30, timed_action_flags = IGNORE_SLOWDOWNS) && C.canBeHandcuffed())
+			log_combat(user, C, "attempted to [cuff_verb]")
+			if(C.body_position == STANDING_UP) //harder to cuff someone standing up
+				cuff_time = initial(cuff_time) * 2
+			else
+				cuff_time = initial(cuff_time)
+			if(do_mob(user, C, cuff_time, timed_action_flags = IGNORE_SLOWDOWNS) && C.canBeHandcuffed())
 				if(iscyborg(user))
 					apply_cuffs(C, user, TRUE)
 				else
 					apply_cuffs(C, user)
-				C.visible_message(span_notice("[user] handcuffs [C]."), \
-									span_userdanger("[user] handcuffs you."))
-				SSblackbox.record_feedback("tally", "handcuffs", 1, type)
+				C.visible_message(span_notice("[user][cuff_verb]s [C]."), \
+									span_userdanger("[user] [cuff_verb]s you."))
+				SSblackbox.record_feedback("tally", "[cuff_verb]s", 1, type)
 
 				log_combat(user, C, "handcuffed")
 			else
-				to_chat(user, span_warning("You fail to handcuff [C]!"))
-				log_combat(user, C, "failed to handcuff")
+				to_chat(user, span_warning("You fail to [cuff_verb] [C]!"))
+				log_combat(user, C, "failed to [cuff_verb]")
 		else
 			to_chat(user, span_warning("[C] doesn't have two hands..."))
-
+			//MOJAVE SUN EDIT END - Handcuffs
 /**
  * This handles handcuffing people
  *
@@ -335,7 +344,7 @@
 	. = ..()
 	update_appearance()
 	var/static/list/loc_connections = list(
-		COMSIG_ATOM_ENTERED = .proc/spring_trap,
+		COMSIG_ATOM_ENTERED = PROC_REF(spring_trap),
 	)
 	AddElement(/datum/element/connect_loc, loc_connections)
 
@@ -388,7 +397,7 @@
 		if(C.body_position == STANDING_UP)
 			def_zone = pick(BODY_ZONE_L_LEG, BODY_ZONE_R_LEG)
 			if(!C.legcuffed && C.num_legs >= 2) //beartrap can't cuff your leg if there's already a beartrap or legcuffs, or you don't have two legs.
-				INVOKE_ASYNC(C, /mob/living/carbon.proc/equip_to_slot, src, ITEM_SLOT_LEGCUFFED)
+				INVOKE_ASYNC(C, TYPE_PROC_REF(/mob/living/carbon, equip_to_slot), src, ITEM_SLOT_LEGCUFFED)
 				SSblackbox.record_feedback("tally", "handcuffs", 1, type)
 	else if(snap && isanimal(L))
 		var/mob/living/simple_animal/SA = L
@@ -422,7 +431,7 @@
 
 /obj/item/restraints/legcuffs/beartrap/energy/Initialize(mapload)
 	. = ..()
-	addtimer(CALLBACK(src, .proc/dissipate), 100)
+	addtimer(CALLBACK(src, PROC_REF(dissipate)), 100)
 
 /**
  * Handles energy snares disappearing

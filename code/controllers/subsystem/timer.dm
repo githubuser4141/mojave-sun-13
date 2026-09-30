@@ -128,6 +128,8 @@ SUBSYSTEM_DEF(timer)
 		callBack.InvokeAsync()
 
 		if(ctime_timer.flags & TIMER_LOOP)
+			if (QDELETED(ctime_timer)) // Don't re-insert timers deleted inside their callbacks.
+				continue
 			ctime_timer.spent = 0
 			ctime_timer.timeToRun = REALTIMEOFDAY + ctime_timer.wait
 			BINARY_INSERT(ctime_timer, clienttime_timers, /datum/timedevent, ctime_timer, timeToRun, COMPARE_KEY)
@@ -174,6 +176,8 @@ SUBSYSTEM_DEF(timer)
 				last_invoke_tick = world.time
 
 			if (timer.flags & TIMER_LOOP) // Prepare looping timers to re-enter the queue
+				if(QDELETED(timer)) // If a loop is deleted in its callback, we need to avoid re-inserting it.
+					continue
 				timer.spent = 0
 				timer.timeToRun = world.time + timer.wait
 				timer.bucketJoin()
@@ -273,7 +277,7 @@ SUBSYSTEM_DEF(timer)
 		return
 
 	// Sort all timers by time to run
-	sortTim(alltimers, .proc/cmp_timer)
+	sortTim(alltimers, GLOBAL_PROC_REF(cmp_timer))
 
 	// Get the earliest timer, and if the TTR is earlier than the current world.time,
 	// then set the head offset appropriately to be the earliest time tracked by the

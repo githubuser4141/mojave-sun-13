@@ -253,13 +253,16 @@
 		return
 	set_light(powered() ? MINIMUM_USEFUL_LIGHT_RANGE : 0)
 
-
+// MOJAVE SUN EDIT BEGIN
+/*
 /obj/machinery/vending/update_icon_state()
 	if(machine_stat & BROKEN)
 		icon_state = "[initial(icon_state)]-broken"
 		return ..()
 	icon_state = "[initial(icon_state)][powered() ? null : "-off"]"
 	return ..()
+*/
+// MOJAVE SUN EDIT END - Freak this
 
 
 /obj/machinery/vending/update_overlays()
@@ -875,7 +878,7 @@ GLOBAL_LIST_EMPTY(vending_products)
 			allowed_configs += "[initial(item.greyscale_config_inhand_right)]"
 
 	var/datum/greyscale_modify_menu/menu = new(
-		src, usr, allowed_configs, CALLBACK(src, .proc/vend_greyscale, params),
+		src, usr, allowed_configs, CALLBACK(src, PROC_REF(vend_greyscale), params),
 		starting_icon_state=initial(fake_atom.icon_state),
 		starting_config=initial(fake_atom.greyscale_config),
 		starting_colors=initial(fake_atom.greyscale_colors)

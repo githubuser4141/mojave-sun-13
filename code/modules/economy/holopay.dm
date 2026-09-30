@@ -130,7 +130,7 @@
 		.["user"] = list()
 		.["user"]["name"] = account.account_holder
 		.["user"]["balance"] = account.account_balance
-
+/* // MOJAVE SUN EDIT BEGIN
 /obj/structure/holopay/ui_act(action, list/params, datum/tgui/ui)
 	. = ..()
 	if(.)
@@ -153,7 +153,7 @@
 			linked_card.set_holopay_name(params["name"])
 			name = linked_card.holopay_name
 	return FALSE
-
+*/ // MOJAVE SUN EDIT END
 /**
  * Links the source card to the holopay. Begins checking if its in range.
  *
@@ -173,10 +173,10 @@
 	set_light(2)
 	visible_message(span_notice("A holographic pay stand appears."))
 	/// Start checking if the source projection is in range
-	RegisterSignal(card, COMSIG_MOVABLE_MOVED, .proc/check_operation)
+	RegisterSignal(card, COMSIG_MOVABLE_MOVED, PROC_REF(check_operation))
 	if(card.loc)
 		holder = WEAKREF(card.loc)
-		RegisterSignal(card.loc, COMSIG_MOVABLE_MOVED, .proc/check_operation)
+		RegisterSignal(card.loc, COMSIG_MOVABLE_MOVED, PROC_REF(check_operation))
 	return TRUE
 
 /**
@@ -190,7 +190,7 @@
 		if(card_holder)
 			UnregisterSignal(card_holder, COMSIG_MOVABLE_MOVED)
 		holder = WEAKREF(linked_card.loc)
-		RegisterSignal(linked_card.loc, COMSIG_MOVABLE_MOVED, .proc/check_operation)
+		RegisterSignal(linked_card.loc, COMSIG_MOVABLE_MOVED, PROC_REF(check_operation))
 	if(!IN_GIVEN_RANGE(src, linked_card, max_holo_range) || !IN_GIVEN_RANGE(src, linked_card.loc, max_holo_range))
 		dissapate()
 

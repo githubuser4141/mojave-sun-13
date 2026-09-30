@@ -5,8 +5,8 @@
 	desc = "I don't think you can assemble stuff with this!"
 	icon = 'mojave/icons/objects/crafting/components_world.dmi'
 	icon_state = "fusion_cell"
-	force = 2
-	throwforce = 2
+	force = 0
+	throwforce = 0
 	w_class = WEIGHT_CLASS_SMALL
 	grid_width = 32
 	grid_height = 32
@@ -44,16 +44,22 @@
 	grid_height = 64
 
 /obj/item/ms13/component/gunpowder
-	name = "high quality gunpowder"
-	desc = "High quality, refined gunpowder. Can be used to make standard quality ammunition."
+	name = "low quality gunpowder"
+	desc = "Low quality, impure, and probably dangerous gunpowder. Can be used to make junk ammunition."
 	icon_state = "gunpowder"
 	grid_width = 32
 	grid_height = 32
 
+/obj/item/ms13/component/gunpowder/hq
+	name = "high quality gunpowder"
+	desc = "High quality, refined gunpowder. Can be used to make standard quality ammunition."
 
-/obj/item/ms13/component/gunpowder/lq
-	name = "low quality gunpowder"
-	desc = "Low quality, impure, and probably dangerous gunpowder. Can be used to make junk ammunition."
+/obj/item/ms13/component/sulfurpearl
+	name = "sulfur pearl"
+	desc = "A pearl... made of sulfur? Potentially a potent ingredient in certain recipes."
+	icon_state = "sulfur_pearl"
+	grid_width = 32
+	grid_height = 32
 
 // Light items (bulbs and stuff) //
 

@@ -51,7 +51,7 @@
 	/// A special action? No idea why this lives here
 	var/list/datum/action/chameleon_item_actions
 	///Cursor icon used when holding shift over things
-	var/examine_cursor_icon = 'icons/effects/mouse_pointers/examine_pointer.dmi'
+	var/examine_cursor_icon = 'mojave/icons/effects/mouse_pointers/examine_pointer.dmi' //MOJAVE Edit
 
 	///Whether this mob has or is in the middle of committing suicide.
 	var/suiciding = FALSE
@@ -104,6 +104,8 @@
 
 	/// Default body temperature
 	var/bodytemperature = BODYTEMP_NORMAL //310.15K / 98.6F
+	/// Our body temperatue as of the last process, prevents pointless work when handling alerts
+	var/old_bodytemperature = 0
 	/// Drowsyness level of the mob
 	var/drowsyness = 0//Carbon
 	/// Dizziness level of the mob
@@ -243,3 +245,11 @@
 	var/datum/client_interface/mock_client
 
 	var/interaction_range = 1 //how far a mob has to be to interact with something, defaulted to 1 tile
+
+	/// Keeps track of time of death for respawn purposes on the base mob
+	var/respawn_timeofdeath = 0
+
+	///the icon currently used for the typing indicator's bubble
+	var/active_typing_indicator
+	///the icon currently used for the thinking indicator's bubble
+	var/active_thinking_indicator

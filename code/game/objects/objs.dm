@@ -28,6 +28,8 @@
 
 	var/drag_slowdown = 1 // Amont of multiplicative slowdown applied if pulled. >1 makes you slower, <1 makes you faster. // Mojave Sun edit - So that no matter what, shit can't be drag exploited | Original is "var/drag_slowdown // Amont of multiplicative slowdown applied if pulled. >1 makes you slower, <1 makes you faster."
 
+	var/weather = FALSE // MOJAVE SUN EDIT - If weather is affecting this obj
+
 	vis_flags = VIS_INHERIT_PLANE //when this be added to vis_contents of something it inherit something.plane, important for visualisation of obj in openspace.
 
 	/// Map tag for something.  Tired of it being used on snowflake items.  Moved here for some semblance of a standard.
@@ -190,7 +192,7 @@
 	if(machine)
 		unset_machine()
 	machine = O
-	RegisterSignal(O, COMSIG_PARENT_QDELETING, .proc/unset_machine)
+	RegisterSignal(O, COMSIG_PARENT_QDELETING, PROC_REF(unset_machine))
 	if(istype(O))
 		O.obj_flags |= IN_USE
 
@@ -305,7 +307,12 @@
 /obj/examine(mob/user)
 	. = ..()
 	if(obj_flags & UNIQUE_RENAME)
-		. += span_notice("Use a pen on it to rename it or change its description.")
+		// MOJAVE SUN EDIT START - Descriptor Changes
+		if(obj_flags & UNIQUE_RENAME_NO_DESCRIPTION)
+			. += span_notice("Use a pen on it to give it a custom name.")
+		else
+			. += span_notice("Use a pen on it to rename it or change its description.")
+		// MOJAVE SUN EDIT END - Descriptor Changes
 	if(unique_reskin && !current_skin)
 		. += span_notice("Alt-click it to reskin it.")
 
@@ -330,7 +337,7 @@
 		items += list("[reskin_option]" = item_image)
 	sort_list(items)
 
-	var/pick = show_radial_menu(M, src, items, custom_check = CALLBACK(src, .proc/check_reskin_menu, M), radius = 38, require_near = TRUE)
+	var/pick = show_radial_menu(M, src, items, custom_check = CALLBACK(src, PROC_REF(check_reskin_menu), M), radius = 38, require_near = TRUE)
 	if(!pick)
 		return
 	if(!unique_reskin[pick])

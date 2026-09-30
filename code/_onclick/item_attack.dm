@@ -201,7 +201,7 @@
 		user.client.give_award(/datum/award/achievement/misc/selfouch, user)
 
 	user.do_attack_animation(M)
-	M.attacked_by(src, user)
+	M.attacked_by(src, user, params)
 
 	log_combat(user, M, "attacked", src.name, "(COMBAT MODE: [uppertext(user.combat_mode)]) (DAMTYPE: [uppertext(damtype)])")
 	add_fingerprint(user)
@@ -265,8 +265,9 @@
 
 /mob/living/attacked_by(obj/item/I, mob/living/user)
 	send_item_attack_message(I, user)
-	if(I.force)
-		apply_damage(I.force, I.damtype)
+	var/no_defended = damage_armor(I.force, MELEE, I.damtype)
+	if(no_defended)
+		apply_damage(no_defended, I.damtype)
 		if(I.damtype == BRUTE)
 			if(prob(33))
 				I.add_mob_blood(src)

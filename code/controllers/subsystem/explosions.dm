@@ -145,7 +145,7 @@ SUBSYSTEM_DEF(explosions)
 		else
 			continue
 
-	addtimer(CALLBACK(GLOBAL_PROC, .proc/wipe_color_and_text, wipe_colours), 100)
+	addtimer(CALLBACK(GLOBAL_PROC, GLOBAL_PROC_REF(wipe_color_and_text), wipe_colours), 100)
 
 /proc/wipe_color_and_text(list/atom/wiping)
 	for(var/i in wiping)
@@ -504,7 +504,7 @@ SUBSYSTEM_DEF(explosions)
  * - [creaking_sound][/sound]: The sound that plays when the station creaks during the explosion.
  * - [hull_creaking_sound][/sound]: The sound that plays when the station creaks after the explosion.
  */
-/datum/controller/subsystem/explosions/proc/shake_the_room(turf/epicenter, near_distance, far_distance, quake_factor, echo_factor, creaking, sound/near_sound = sound(get_sfx("explosion")), sound/far_sound = sound('sound/effects/explosionfar.ogg'), sound/echo_sound = sound('sound/effects/explosion_distant.ogg'), sound/creaking_sound = sound(get_sfx("explosion_creaking")), hull_creaking_sound = sound(get_sfx("hull_creaking")))
+/datum/controller/subsystem/explosions/proc/shake_the_room(turf/epicenter, near_distance, far_distance, quake_factor, echo_factor, creaking, sound/near_sound = sound(get_sfx("explosion")), sound/far_sound = sound(get_sfx("explosion_distant")), sound/echo_sound = sound(get_sfx("explosion_far")), sound/creaking_sound = sound(get_sfx("explosion_far")), hull_creaking_sound = sound(get_sfx("explosion_far"))) // MOJAVE SUN EDIT - ORIGINAL IS (turf/epicenter, near_distance, far_distance, quake_factor, echo_factor, creaking, sound/near_sound = sound(get_sfx("explosion")), sound/far_sound = sound('sound/effects/explosionfar.ogg'), sound/echo_sound = sound('sound/effects/explosion_distant.ogg'), sound/creaking_sound = sound(get_sfx("explosion_creaking")), hull_creaking_sound = sound(get_sfx("hull_creaking")))
 	var/frequency = get_rand_frequency()
 	var/blast_z = epicenter.z
 	if(isnull(creaking)) // Autoset creaking.
@@ -524,7 +524,7 @@ SUBSYSTEM_DEF(explosions)
 			distance = 0
 		var/base_shake_amount = sqrt(near_distance / (distance + 1))
 
-		if(distance <= round(near_distance + world.view - 2, 1)) // If you are close enough to see the effects of the explosion first-hand (ignoring walls)
+		if(distance <= round(near_distance + world.view + 2, 1)) // If you are close enough to see the effects of the explosion first-hand (ignoring walls) // MOJAVE SUN EDIT - ORIGINAL IS if(distance <= round(near_distance + world.view - 2, 1)) // If you are close enough to see the effects of the explosion first-hand (ignoring walls)
 			listener.playsound_local(epicenter, null, 100, TRUE, frequency, S = near_sound)
 			if(base_shake_amount > 0)
 				shake_camera(listener, NEAR_SHAKE_DURATION, clamp(base_shake_amount, 0, NEAR_SHAKE_CAP))
@@ -552,7 +552,7 @@ SUBSYSTEM_DEF(explosions)
 			listener.playsound_local(epicenter, null, echo_volume, TRUE, frequency, S = echo_sound, distance_multiplier = 0)
 
 		if(creaking) // 5 seconds after the bang, the station begins to creak
-			addtimer(CALLBACK(listener, /mob/proc/playsound_local, epicenter, null, rand(FREQ_LOWER, FREQ_UPPER), TRUE, frequency, null, null, FALSE, hull_creaking_sound, 0), CREAK_DELAY)
+			addtimer(CALLBACK(listener, TYPE_PROC_REF(/mob, playsound_local), epicenter, null, rand(FREQ_LOWER, FREQ_UPPER), TRUE, frequency, null, null, FALSE, hull_creaking_sound, 0), CREAK_DELAY)
 
 #undef CREAK_DELAY
 #undef QUAKE_CREAK_PROB
@@ -730,6 +730,7 @@ SUBSYSTEM_DEF(explosions)
 					var/atom_throw_range = rand(throw_range, max_range)
 					var/turf/throw_at = get_ranged_target_turf(A, throw_dir, atom_throw_range)
 					A.throw_at(throw_at, atom_throw_range, EXPLOSION_THROW_SPEED, quickstart = FALSE)
+
 		cost_throwturf = MC_AVERAGE(cost_throwturf, TICK_DELTA_TO_MS(TICK_USAGE_REAL - timer))
 
 	currentpart = SSEXPLOSIONS_TURFS

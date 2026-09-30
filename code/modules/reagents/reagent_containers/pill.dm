@@ -15,6 +15,7 @@
 	var/rename_with_volume = FALSE
 	var/self_delay = 0 //pills are instant, this is because patches inheret their aplication from pills
 	var/dissolvable = TRUE
+	var/chompsound // MOJAVE SUN EDIT
 
 /obj/item/reagent_containers/pill/Initialize(mapload)
 	. = ..()
@@ -33,6 +34,8 @@
 			if(!do_mob(user, M, self_delay))
 				return FALSE
 		to_chat(M, span_notice("You [apply_method] [src]."))
+		playsound(src, chompsound, 35, TRUE, 2)
+
 
 	else
 		M.visible_message(span_danger("[user] attempts to force [M] to [apply_method] [src]."), \
@@ -41,13 +44,15 @@
 			return FALSE
 		M.visible_message(span_danger("[user] forces [M] to [apply_method] [src]."), \
 							span_userdanger("[user] forces you to [apply_method] [src]."))
+		playsound(src, chompsound, 35, TRUE, 2)
+
 
 	return on_consumption(M, user)
 
 ///Runs the consumption code, can be overriden for special effects
 /obj/item/reagent_containers/pill/proc/on_consumption(mob/M, mob/user)
 	if(icon_state == "pill4" && prob(5)) //you take the red pill - you stay in Wonderland, and I show you how deep the rabbit hole goes
-		addtimer(CALLBACK(GLOBAL_PROC, .proc/to_chat, M, span_notice("[pick(strings(REDPILL_FILE, "redpill_questions"))]")), 50)
+		addtimer(CALLBACK(GLOBAL_PROC, GLOBAL_PROC_REF(to_chat), M, span_notice("[pick(strings(REDPILL_FILE, "redpill_questions"))]")), 50)
 
 	if(reagents.total_volume)
 		reagents.trans_to(M, reagents.total_volume, transfered_by = user, methods = apply_type)
