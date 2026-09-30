@@ -1,3 +1,3 @@
 // these should be completely lowertext
-#define FATNESS_AVERAGE "average"
-#define FATNESS_OBESE "obese"
+#define SIZENESS_AVERAGE "average"
+#define SIZENESS_BIG "big"
